@@ -7,7 +7,7 @@
     <header>
         <div class="signedInStatus">
             <p class="nojs-show loaded">
-                {#if $page.data.session && $page.data.session.access_token}
+                {#if $page.data.session && $page.data.session?.token?.access_token}
                     {#if $page.data.session.user?.picture}
             <span
                     style="background-image: url('{$page.data.session.user.picture}')"

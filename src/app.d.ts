@@ -1,4 +1,7 @@
-interface Session {
+import type { Session } from 'svelte-kit-cookie-session';
+
+
+interface SessionData {
     token?: {
         access_token?: string,
         expires: number
@@ -9,6 +12,7 @@ interface Session {
         picture: string
         lang: string
     }
+    redirectPath?: string
 }
 
 // See https://kit.svelte.dev/docs/types#app
@@ -17,10 +21,12 @@ declare global {
     namespace App {
         // interface Error {}
         interface Locals {
-            session: Session
+            session: Session<SessionData>
         }
 
-        // interface PageData {}
+         interface PageData {
+             session: SessionData;
+         }
         // interface Platform {}
     }
 }

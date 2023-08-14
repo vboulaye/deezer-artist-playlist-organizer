@@ -2,8 +2,8 @@ import {env} from "$env/dynamic/private";
 import {getCookie, setCookie} from "$lib/CookieManager";
 import {callDeezer} from "$lib/DeezerCall";
 import {DeezerConfig} from "$lib/DeezerConfig";
-import {error, json, redirect} from '@sveltejs/kit';
 import type {RequestEvent} from '@sveltejs/kit';
+import {error, redirect} from '@sveltejs/kit';
 
 export async function GET({request, cookies, fetch, locals, route, url}: RequestEvent) {
     const code = url.searchParams.get("code");
@@ -16,25 +16,28 @@ export async function GET({request, cookies, fetch, locals, route, url}: Request
     const tokenResponse = await fetch(tokenUrl);
     const tokenText = await tokenResponse.text();
     try {
-        const tokenJson = JSON.parse(tokenText);
+        const token = JSON.parse(tokenText);
         console.log("setting cookoie deezer-artist-playlist-organizer-token " + tokenText)
-        setCookie(cookies, 'deezer-artist-playlist-organizer-token', tokenJson);
-        locals.session.token = tokenJson
+        setCookie(cookies, 'deezer-artist-playlist-organizer-token', token);
+        await locals.session.update(data => ({...data, token}));
+
     } catch (e) {
         throw error(500, "authentification failure: " + e + " - " + tokenText)
     }
 
-    if (!locals.session.token) {
+    if (!locals.session.data.token) {
         throw error(500, "missing token in session: ")
     }
 
-    const user = await callDeezer({apiPath: "/user/me", accessToken: locals.session.token.access_token});
-    const {id, name, picture, lang} = user as any
-    locals.session.user = {
+    const userResponse = await callDeezer({apiPath: "/user/me", accessToken: locals.session.data.token.access_token});
+    const {id, name, picture, lang} = userResponse as any
+    const user = {
         id, name, picture, lang
     }
-    console.log({user: locals.session.user})
-    const redirectPostAuth = getCookie(cookies, 'deezer-artist-playlist-organizer-redirect') || '/';
+    await locals.session.update(data => ({...data, user}));
+
+    console.log({user})
+    const redirectPostAuth = locals.session.data.redirectPath || '/';
     console.log({redirectPostAuth})
     throw redirect(302, redirectPostAuth)
 }

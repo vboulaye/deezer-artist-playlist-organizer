@@ -16,7 +16,8 @@ export async function GET({request, cookies, fetch, locals, url}: RequestEvent) 
 
     const authorizationUrl = `${deezerAuthorizationUrl}?app_id=${deezerApplicationId}&redirect_uri=${redirectUrl}&perms=${permissions}&output=json`
 
-    setCookie(cookies, 'deezer-artist-playlist-organizer-redirect', url.searchParams.get("redirect") || '/');
+    const redirectPath = url.searchParams.get("redirect") || '/';
+    await locals.session.update(data => ({...data, redirectPath}));
 
     throw redirect(302, authorizationUrl);
 }
