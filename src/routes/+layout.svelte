@@ -1,6 +1,13 @@
 <script lang="ts">
     import {page} from "$app/stores"
 
+    // Your selected Skeleton theme:
+    import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
+    // This contains the bulk of Skeletons required styles:
+    import '@skeletonlabs/skeleton/styles/skeleton.css';
+    // Finally, your application's global stylesheet (sometimes labeled 'app.css')
+    import '../app.postcss';
+
     let showSession = false
 </script>
 
@@ -25,8 +32,7 @@
                 {:else}
                     <span class="notSignedInText">You are not signed in</span>
 
-                    <a href="/auth/signin"
-                       class="buttonPrimary" data-sveltekit-preload-data="off">Sign in</a>
+                    <a href="/auth/signin" class="buttonPrimary" data-sveltekit-preload-data="off">Sign in</a>
                 {/if}
             </p>
         </div>

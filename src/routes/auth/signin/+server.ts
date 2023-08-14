@@ -12,8 +12,15 @@ export async function GET({request, cookies, fetch, locals, url}: RequestEvent) 
     const deezerAuthorizationUrl = DeezerConfig.AUTHORIZATION_URL
     const deezerApplicationId = env.DEEZER_ID
     const redirectUrl = `${env.ORIGIN}/auth/callback`;
-    const permissions = `basic_access,email,manage_library,delete_library,listening_history,manage_community`;
-
+    const permissions = [
+        "basic_access",
+        "email",
+        "manage_library",
+        "delete_library",
+        "listening_history",
+        "manage_community",
+        "offline_access",
+    ].join(',')
     const authorizationUrl = `${deezerAuthorizationUrl}?app_id=${deezerApplicationId}&redirect_uri=${redirectUrl}&perms=${permissions}&output=json`
 
     const redirectPath = url.searchParams.get("redirect") || '/';
