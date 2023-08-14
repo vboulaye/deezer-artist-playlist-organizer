@@ -1,5 +1,6 @@
 import type { Session } from 'svelte-kit-cookie-session';
 
+import 'unplugin-icons/types/svelte';
 
 interface SessionData {
     token?: {

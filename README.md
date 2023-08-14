@@ -20,3 +20,15 @@ So I configure the application with:
 
 then store the application id / secret in variables in `.env` at the root of the project.
 see .env.example for all the variables to be defined
+
+
+Or use localhost + local reverse proxy
+```
+sudo socat TCP-LISTEN:80,reuseaddr,fork,su=nobody TCP:127.0.0.1:5173
+```
+
+- application domain: localhost
+- redirect url: http://localhost/auth/callback
+- tos url: https://localhost/tos
+
+                                                                                                                                              

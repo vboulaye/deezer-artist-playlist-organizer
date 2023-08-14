@@ -8,20 +8,20 @@ import type {PageLoad} from "./$types";
 
 export const ssr = false
 
-export async function load({parent, url}: PageLoad) {
+export async function load({parent, params, url}: PageLoad) {
     const {session} = await parent();
-    const startIndex = extractPaginationIndex(url);
     if (!session?.token?.access_token) {
         throw error(500, "no access token in session")
     }
 
+    const playlistId = params.id;
+
     console.log("call")
     return {
-        playlists: callDeezer<PaginatedResult<DeezerPlaylist>>({
-            apiPath: `/user/${session.user.id}/playlists?index=${startIndex}`,
+        playlist: callDeezer<DeezerPlaylist>({
+            apiPath: `/playlist/${playlistId}`,
             accessToken: session.token.access_token
         })
-            .then(result => appendIndexToPaginationResults(result, startIndex))
     }
 
 }
