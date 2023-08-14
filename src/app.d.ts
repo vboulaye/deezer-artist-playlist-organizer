@@ -5,6 +5,7 @@ interface SessionData {
     token?: {
         access_token?: string,
         expires: number
+        expiresOn: string // date time
     }
     user?: {
         id: number

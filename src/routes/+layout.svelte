@@ -25,8 +25,8 @@
                     {/if}
                     <span class="signedInText">
             <small>Signed in as</small><br/>
-            <strong>{$page.data.session.user?.name}</strong
-            >
+            <strong>{$page.data.session.user?.name}</strong>
+                        (until {$page.data.session.token.expiresOn})
           </span>
                     <a href="/auth/signout" class="button" data-sveltekit-preload-data="off">Sign out</a>
                 {:else}

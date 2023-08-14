@@ -1,5 +1,4 @@
 import {env} from "$env/dynamic/private";
-import {getCookie, setCookie} from "$lib/CookieManager";
 import {callDeezer} from "$lib/DeezerCall";
 import {DeezerConfig} from "$lib/DeezerConfig";
 import type {RequestEvent} from '@sveltejs/kit';
@@ -17,8 +16,8 @@ export async function GET({request, cookies, fetch, locals, route, url}: Request
     const tokenText = await tokenResponse.text();
     try {
         const token = JSON.parse(tokenText);
-        console.log("setting cookoie deezer-artist-playlist-organizer-token " + tokenText)
-        setCookie(cookies, 'deezer-artist-playlist-organizer-token', token);
+        token.expiresOn = new Date(Date.now() + token.expires * 1000).toISOString()
+        console.log("read token" , token)
         await locals.session.update(data => ({...data, token}));
 
     } catch (e) {
