@@ -1,9 +1,12 @@
 import {env} from "$env/dynamic/private";
 import {getCookie} from "$lib/CookieManager";
+import {ROOT_LOGGER} from "$lib/Debug";
 import type {Handle} from '@sveltejs/kit';
 import {sequence} from '@sveltejs/kit/hooks';
 
 import {handleSession} from 'svelte-kit-cookie-session';
+
+const LOGGER = ROOT_LOGGER.extend('hook-server')
 
 const sessionHandle = handleSession({
     // Optional initial state of the session, default is an empty object {}
@@ -17,8 +20,7 @@ const sessionHandle = handleSession({
 const authorization: Handle = async ({event, resolve}) => {
 
     const session = event.locals.session;
-    console.log({session})
-
+    // LOGGER("authorization session:",{session})
 
     // // Protect any routes under /authenticated
     // if (event.url.pathname.startsWith('/ops')) {

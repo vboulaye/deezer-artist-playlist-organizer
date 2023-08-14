@@ -1,5 +1,7 @@
 <script lang="ts">
     import {page} from "$app/stores"
+
+    let showSession = false
 </script>
 
 
@@ -31,10 +33,18 @@
         <nav>
             <ul class="navItems">
                 <li class="navItem"><a href="/">Home</a></li>
-                <li class="navItem"><a href="/protected">Protected</a></li>
+                <li class="navItem"><a href="/playlists">Playlists</a></li>
+                <li class="navItem"><a href="#showSession" on:click={()=>showSession=!showSession}>{showSession ? 'hide session' : 'show session'}</a></li>
             </ul>
         </nav>
     </header>
+
+    {#if showSession}
+        <pre id="showSession">
+            { JSON.stringify($page.data.session, null, 2)}
+        </pre>
+    {/if}
+
     <slot/>
 </div>
 
