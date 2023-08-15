@@ -15,10 +15,9 @@ export async function load({parent, url}: PageLoad) {
         throw error(500, "no access token in session")
     }
 
-    console.log("call")
     return {
         playlists: callDeezer<PaginatedResult<DeezerPlaylist>>({
-            apiPath: `/user/${session.user.id}/playlists?index=${startIndex}`,
+            apiPath: `/user/${session.user.id}/playlists?index=${startIndex}&limit=1000`,
             accessToken: session.token.access_token
         })
             .then(result => appendIndexToPaginationResults(result, startIndex))

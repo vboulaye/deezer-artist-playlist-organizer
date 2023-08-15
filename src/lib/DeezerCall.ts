@@ -9,14 +9,15 @@ export const API_URL = "https://api.deezer.com"
 async function fetchDeezer(url: URL) {
     if (browser) {
         url.searchParams.set("output", "jsonp")
-        console.log({fetchJsonp: url.toString()})
+        LOGGER({fetchJsonp: url.toString()})
+        console.log(url.toString())
         const response = await fetchJsonp(url.toString());
         if (!response.ok) {
             throw error(500, "error in jsonp call " + url.pathname)
         }
         return response;
     } else {
-        console.log({fetch: url})
+        LOGGER({fetch: url})
         return await fetch(url);
     }
 }
@@ -24,6 +25,7 @@ async function fetchDeezer(url: URL) {
 export async function callDeezer<T>(req: {
     apiPath: string,
     accessToken?: string,
+    searchParams?: { [k: string]: string }
 }): Promise<T> {
     if (!req.accessToken) {
         throw error(500, "no access_token in session")
@@ -31,6 +33,12 @@ export async function callDeezer<T>(req: {
     LOGGER(`calling ${req.apiPath}`)
     const url = new URL(req.apiPath, API_URL);
     url.searchParams.set("access_token", req.accessToken)
+    if (req.searchParams) {
+        Object.entries(req.searchParams)
+            .forEach(([key, value]) => {
+                url.searchParams.set(key, value)
+            })
+    }
 
     const response = await fetchDeezer(url);
     const responseData = await response.json();

@@ -7,6 +7,7 @@
     import '@skeletonlabs/skeleton/styles/skeleton.css';
     // Finally, your application's global stylesheet (sometimes labeled 'app.css')
     import '../app.postcss';
+    import {Toast} from "@skeletonlabs/skeleton";
 
     let showSession = false
 </script>
@@ -54,6 +55,8 @@
     <slot/>
 </div>
 
+
+<Toast />
 
 <style>
     :global(body) {

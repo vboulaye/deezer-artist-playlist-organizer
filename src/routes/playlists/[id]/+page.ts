@@ -16,7 +16,6 @@ export async function load({parent, params, url}: PageLoad) {
 
     const playlistId = params.id;
 
-    console.log("call")
     return {
         playlist: callDeezer<DeezerPlaylist>({
             apiPath: `/playlist/${playlistId}`,
