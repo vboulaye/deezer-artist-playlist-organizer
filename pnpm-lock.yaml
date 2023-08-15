@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 devDependencies:
+  '@iconify-json/jam':
+    specifier: ^1.1.5
+    version: 1.1.5
   '@iconify-json/ph':
     specifier: ^1.1.6
     version: 1.1.6
@@ -380,6 +383,12 @@ packages:
 
   /@humanwhocodes/object-schema@1.2.1:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
+    dev: true
+
+  /@iconify-json/jam@1.1.5:
+    resolution: {integrity: sha512-qrCwR9jFIcd62I9NHdFLtEOtuQ7U+1V4RncrAo01/nQAXHPAZLmfFIO+1o/mPDR06h7EABDzVLKnW5qcbBlM8g==}
+    dependencies:
+      '@iconify/types': 2.0.0
     dev: true
 
   /@iconify-json/ph@1.1.6:

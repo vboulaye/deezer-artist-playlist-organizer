@@ -31,4 +31,5 @@ sudo socat TCP-LISTEN:80,reuseaddr,fork,su=nobody TCP:127.0.0.1:5173
 - redirect url: http://localhost/auth/callback
 - tos url: https://localhost/tos
 
-                                                                                                                                              
+                          
+icons from https://icon-sets.iconify.design/ph                                                                                                                    

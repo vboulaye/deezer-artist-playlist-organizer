@@ -18,6 +18,7 @@
 		"test:unit": "vitest"
 	},
 	"devDependencies": {
+		"@iconify-json/jam": "^1.1.5",
 		"@iconify-json/ph": "^1.1.6",
 		"@playwright/test": "^1.37.0",
 		"@skeletonlabs/skeleton": "^1.11.0",
