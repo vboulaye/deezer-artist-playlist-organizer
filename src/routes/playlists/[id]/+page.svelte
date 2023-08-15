@@ -51,7 +51,8 @@
 </AppBar>
 
 
-<form>
+<form class="mb-10 space-y-2">
+
     <label class="label">
         <span>Title</span>
         <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
@@ -62,66 +63,74 @@
         <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
     </label>
 
-    <button on:click={savePlaylist} class="btn variant-filled">
-        <IconSave/>
-        <span>Update</span>
-    </button>
+    <div class="flex place-content-end">
+        <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>
+            <IconSave/>
+            <span>Update playlist</span>
+        </button>
+    </div>
 
-    <label class="label">
+</form>
+
+<label class="label">
+    <div class="flex place-content-between">
         <span>Tracks ({data.playlist.tracks.data.length})</span>
-
-        <div class="table-container">
-            <table class="table table-hover">
-                <thead>
+        <button class="btn variant-filled-secondary">
+            <IconSave/>
+            <span>Update Tracks</span>
+        </button>
+        <span><!-- empty box to the right --></span>
+    </div>
+    <div class="table-container">
+        <table class="table table-hover">
+            <thead>
+            <tr class="center">
+                <th>Index</th>
+                <th class="w-1/3">Title</th>
+                <th>Album</th>
+                <th>Artist</th>
+                <th>rank</th>
+                <th>duration</th>
+            </tr>
+            </thead>
+            <tbody>
+            {#each data.playlist.tracks.data as row, i}
                 <tr class="center">
-                    <th>Index</th>
-                    <th class="w-1/3">Title</th>
-                    <th>Album</th>
-                    <th>Artist</th>
-                    <th>rank</th>
-                    <th>duration</th>
-                </tr>
-                </thead>
-                <tbody>
-                {#each data.playlist.tracks.data as row, i}
-                    <tr class="center">
-                        <td>{i + 1}</td>
-                        <td><span class="flex items-center">
+                    <td>{i + 1}</td>
+                    <td><span class="flex items-center">
                             <AudioPlayer src={row.preview} enabled={row.readable}/>
                             <span class="m-2 " class:text-red-500={!row.readable}>
                             {row.title}
                             </span>
                             <a href={row.link} title="open track in Deezer web interface"><IconDeezer/></a>
                         </span></td>
-                        <td><span class="flex items-center">
+                    <td><span class="flex items-center">
                             <img src={row.album.cover_small} alt="album cover"/>
                             <span class="m-2">{row.album.title}</span>
                                <a href="https://www.deezer.com/album/{row.album.id}" title="open album in Deezer web interface">
                                 <IconDeezer/>
                             </a>
                         </span></td>
-                        <td><span class="flex items-center">
+                    <td><span class="flex items-center">
                             <span class="m-2"> {row.artist.name}</span>
                             <a href={row.artist.link} title="open artist in Deezer web interface">
                                 <IconDeezer/>
                             </a>
                             </span>
-                        </td>
+                    </td>
 
-                        <td>{row.rank}</td>
-                        <td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}</td>
-                        <td>
+                    <td>{row.rank}</td>
+                    <td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}</td>
+                    <td>
 
-                        </td>
-                    </tr>
-                {/each}
-                </tbody>
-            </table>
-        </div>
+                    </td>
+                </tr>
+            {/each}
+            </tbody>
+        </table>
+    </div>
 
-    </label>
-
-</form>
+</label>
 
 
 <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
