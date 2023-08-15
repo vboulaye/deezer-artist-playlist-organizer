@@ -41,7 +41,7 @@
                 </td>
                 <td>{row.type}</td>
                 <td class="items-center">{row.creation_date}</td>
-                <td><input class="checkbox" type="checkbox" bind:checked={row.public} disabled/></td>
+                <td><input class="checkbox" type="checkbox" checked={row.public} disabled/></td>
                 <td>{row.nb_tracks}</td>
                 <td>{humanizeDuration(row.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
             </tr>
