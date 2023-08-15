@@ -1,6 +1,7 @@
 <script lang="ts">
     import {extractPaginationIndex} from "$lib/PaginationUtils";
     import type {PageData} from "./$types";
+    import humanizeDuration from "humanize-duration";
 
     export let data: PageData
 
@@ -24,6 +25,7 @@
             <th>Created on</th>
             <th>Public?</th>
             <th># Tracks</th>
+            <th>duration</th>
         </tr>
         </thead>
         <tbody>
@@ -39,8 +41,9 @@
                 </td>
                 <td>{row.type}</td>
                 <td class="items-center">{row.creation_date}</td>
-                <td>{row.public}</td>
+                <td><input class="checkbox" type="checkbox" bind:checked={row.public} disabled/></td>
                 <td>{row.nb_tracks}</td>
+                <td>{humanizeDuration(row.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
             </tr>
         {/each}
         </tbody>

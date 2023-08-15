@@ -3,6 +3,7 @@
     import {extractPaginationIndex} from "$lib/PaginationUtils";
     import type {PageData} from "./$types";
 
+    import humanizeDuration from "humanize-duration";
     import IconDeezer from '~icons/jam/deezer-circle'
     import {AppBar} from '@skeletonlabs/skeleton';
 
@@ -73,7 +74,7 @@
                             </a>
                         </span></td>
                         <td>{row.rank}</td>
-                        <td>{row.duration}</td>
+                        <td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}</td>
                         <td>
 
                         </td>
