@@ -8,7 +8,7 @@
     let debug = false
 
     function extractIndexFromPaginationUrl(paginationUrl: string): string {
-        const index = extractPaginationIndex(new URL(paginationUrl));
+        const index = extractPaginationIndex(new URL(paginationUrl)) ||0;
         return `?index=${index}`
     }
 
@@ -21,7 +21,6 @@
         <thead>
         <tr>
             <th class="w-1/3">Title</th>
-            <th>Description</th>
             <th>Created on</th>
             <th>Public?</th>
             <th># Tracks</th>
@@ -39,7 +38,6 @@
                         </div>
                     </a>
                 </td>
-                <td>{row.type}</td>
                 <td class="items-center">{row.creation_date}</td>
                 <td><input class="checkbox" type="checkbox" checked={row.public} disabled/></td>
                 <td>{row.nb_tracks}</td>

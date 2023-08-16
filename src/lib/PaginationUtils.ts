@@ -1,18 +1,19 @@
-import {ROOT_LOGGER} from "$lib/Debug";
+import {ROOT_LOGGER, traceDuration} from "$lib/Debug";
+import {callDeezer} from "$lib/DeezerCall";
 
 
 const LOGGER = ROOT_LOGGER.extend('pagination-utils')
 
-export function extractPaginationIndex(url: URL): number {
+export function extractPaginationIndex(url: URL): number | undefined {
     const indexFromSearchParams = url.searchParams.get("index");
     if (!indexFromSearchParams) {
-        return 0
+        return undefined
     }
     try {
         return parseInt(indexFromSearchParams)
     } catch (e) {
         LOGGER("unable to parse page index %s from url %s", indexFromSearchParams, url)
-        return 0
+        return undefined
     }
 }
 
@@ -29,4 +30,34 @@ export function appendIndexToPaginationResults<T>(result: PaginatedResult<T>, st
     result.startIndex = startIndex
     result.endIndex = startIndex + result.data.length
     return result as PaginatedResult<T>
+}
+
+
+export async function getRemainingPages<T>(req: {
+    apiPath: string,
+    accessToken: string,
+    index: number,
+    limit: number,
+}): Promise<PaginatedResult<T>> {
+    console.log("getRemainingPages", req.index)
+
+    const nextPage = await callDeezer<PaginatedResult<T>>({
+        apiPath: req.apiPath,
+        accessToken: req.accessToken,
+        searchParams: {
+            limit: req.limit,
+            index: req.index,
+        }
+    });
+    delete nextPage.prev
+    if (nextPage.next) {
+        const nextIndex = extractPaginationIndex(new URL(nextPage.next));
+        if (nextIndex) {
+            delete nextPage.next
+            const remainingPages = await getRemainingPages<T>({...req, index: nextIndex});
+            nextPage.data = [...nextPage.data, ...remainingPages.data]
+        }
+    }
+    return nextPage
+
 }

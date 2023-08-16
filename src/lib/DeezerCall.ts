@@ -25,7 +25,7 @@ async function fetchDeezer(url: URL) {
 export async function callDeezer<T>(req: {
     apiPath: string,
     accessToken?: string,
-    searchParams?: { [k: string]: string }
+    searchParams?: { [k: string]: string|number|boolean }
 }): Promise<T> {
     if (!req.accessToken) {
         throw error(500, "no access_token in session")
@@ -36,7 +36,7 @@ export async function callDeezer<T>(req: {
     if (req.searchParams) {
         Object.entries(req.searchParams)
             .forEach(([key, value]) => {
-                url.searchParams.set(key, value)
+                url.searchParams.set(key, ""+value)
             })
     }
 

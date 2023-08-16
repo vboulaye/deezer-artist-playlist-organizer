@@ -1,5 +1,6 @@
 <script lang="ts">
     import AudioPlayer from "$lib/AudioPlayer.svelte";
+    import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {callDeezer} from "$lib/DeezerCall";
     import {AppBar, toastStore} from '@skeletonlabs/skeleton';
 
@@ -10,29 +11,17 @@
 
     export let data: PageData
 
-    const artistsById = data.playlist.tracks.data
-        .reduce((accumulator, track) => {
-            if (!accumulator[track.artist.id]) {
-                accumulator[track.artist.id] = {artist: track.artist, count: 0}
-            }
-            accumulator[track.artist.id].count++
-            return accumulator
-        }, {})
-    const playlistTopArtists = Object.values(artistsById)
-        .filter(artist => artist.count >= data.playlist.tracks.data.length / 2)
-        .sort((a, b) => b.count - a.count)
-    ;
 
     async function savePlaylist() {
-        const {title, description, publicFlag} = data.playlist
+        const {title, description} = data.playlist
         const updateResult = await callDeezer({
             apiPath: `/playlist/${data.playlist.id}`,
-            accessToken: data.session.token.access_token,
+            accessToken: data.session.token?.access_token,
             searchParams: {
                 request_method: "POST",
                 title,
                 description,
-                //public: publicFlag,
+                public: data.playlist.public,
             }
         });
         toastStore.trigger({
@@ -43,6 +32,18 @@
 
     let debug = false
 
+    function addArtist(artist:unknown) {
+        artist.albums.forEach(album => {
+            album.tracks.forEach(track => {
+                const existingTrack = data.playlist.tracks.data.find(playlistTrack => playlistTrack.id===track.id);
+                if (!existingTrack) {
+                    track.album=album
+                    data.playlist.tracks.data.push(track)
+                }
+            })
+        })
+        data=data
+    }
 </script>
 
 <AppBar>
@@ -71,6 +72,24 @@
     </div>
 
 </form>
+
+
+<ul class="list">
+
+    {#each data.topArtists as topArtist, i}
+        <li>
+        <span class="flex items-center">
+            <span class="m-2"> {topArtist.artist.name}</span>
+                <a href={topArtist.artist.link} title="open artist in Deezer web interface">
+                    <IconDeezer/>
+                </a>
+            {topArtist.count} tracks in playlist /
+            {topArtist.albums.flatMap(x => x.tracks).length} tracks (in {topArtist.albums.length} albums)
+            <button class="btn variant-filled-tertiary" on:click={()=> addArtist(topArtist)}>add artist</button>
+        </span>
+        </li>
+    {/each}
+</ul>
 
 <label class="label">
     <div class="flex place-content-between">
@@ -111,7 +130,7 @@
                                 <IconDeezer/>
                             </a>
                         </span></td>
-                    <td><span class="flex items-center">
+                    <td> <span class="flex items-center">
                             <span class="m-2"> {row.artist.name}</span>
                             <a href={row.artist.link} title="open artist in Deezer web interface">
                                 <IconDeezer/>
@@ -135,6 +154,7 @@
 
 <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
 <pre id="showDebug">
+        { JSON.stringify({topArtists: data.topArtists}, null, 2)}
     {#if debug}
         { JSON.stringify({playlist: data.playlist}, null, 2)}
     {/if}

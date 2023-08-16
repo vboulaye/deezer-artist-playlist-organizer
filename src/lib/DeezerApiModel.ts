@@ -1,8 +1,6 @@
-
 export interface DeezerPlaylist {
     id: number
     title: string
-    description?: string
     duration: number
     public: boolean
     is_loved_track: boolean
@@ -27,6 +25,51 @@ export interface DeezerPlaylist {
         name: string
         tracklist: string
         type: "user"
-    },
+    }
     type: "playlist"
+}
+
+export interface DeezerArtist {
+    id: number
+    name: string
+    link: string
+    tracklist: string
+    type: "artist"
+}
+export interface DeezerAlbum {
+    id: number
+    title: string
+    cover: string
+    cover_small: string
+    cover_medium: string
+    cover_big: string
+    cover_xl: string
+    md5_image: string
+    tracklist: string
+    type: "album"
+}
+
+export interface DeezerPlaylistDetails extends DeezerPlaylist {
+    description: string
+    tracks: {
+        data: {
+            id: number
+            readable: boolean
+            title: string
+            title_short: string
+            title_version: string
+            link: string
+            duration: number
+            rank: number
+            explicit_lyrics: false
+            explicit_content_lyrics: number
+            explicit_content_cover: number
+            preview: string
+            md5_image: string
+            time_add: number
+            artist: DeezerArtist
+            album: DeezerAlbum
+            type: "track"
+        }[]
+    }
 }
