@@ -22,10 +22,12 @@ async function fetchDeezer(url: URL) {
     }
 }
 
+export interface DeezerSearchParams { [k: string]: string|number|boolean }
+
 export async function callDeezer<T>(req: {
     apiPath: string,
     accessToken?: string,
-    searchParams?: { [k: string]: string|number|boolean }
+    searchParams?: DeezerSearchParams
 }): Promise<T> {
     if (!req.accessToken) {
         throw error(500, "no access_token in session")
