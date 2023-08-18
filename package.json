@@ -21,7 +21,7 @@
 		"@iconify-json/jam": "^1.1.5",
 		"@iconify-json/ph": "^1.1.6",
 		"@playwright/test": "^1.37.0",
-		"@skeletonlabs/skeleton": "^1.11.0",
+		"@skeletonlabs/skeleton": "^1.12.0",
 		"@sveltejs/adapter-auto": "^2.1.0",
 		"@sveltejs/kit": "^1.22.6",
 		"@tailwindcss/forms": "^0.5.4",

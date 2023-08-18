@@ -4,14 +4,18 @@
     import type {DeezerSearchParams} from "$lib/DeezerCall";
     import {callDeezer} from "$lib/DeezerCall";
     import Td from "$lib/html/Td.svelte";
-    import {AppBar, toastStore} from '@skeletonlabs/skeleton';
+    import type {PaginatedResult} from "$lib/PaginationUtils";
+    import {AppBar, popup, toastStore} from '@skeletonlabs/skeleton';
+    import type {PopupSettings} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
-    import {writable} from "svelte/store";
+    import {derived, writable} from "svelte/store";
     import type {Writable} from "svelte/store";
     import IconDeezer from '~icons/jam/deezer-circle'
     import IconSave from '~icons/ph/cloud-check-bold'
     import type {PageData} from "./$types";
+    import {Autocomplete} from '@skeletonlabs/skeleton';
+    import type {AutocompleteOption} from '@skeletonlabs/skeleton';
 
     export let data: PageData
 
@@ -110,7 +114,54 @@
         }
         return ""
     }
+
+    let artistSearch = writable("")
+
+    function onArtistSelection(artist) {
+        console.log({artist})
+    }
+
+    let popupSettings: PopupSettings = {
+        event: 'focus-click',
+        target: 'popupAutocomplete',
+        placement: 'bottom',
+    };
+
+    const artistsFound = derived<Writable<string>, AutocompleteOption[]>(artistSearch, ($artistSearch, set) => {
+        if (!$artistSearch) {
+            set([])
+            return
+        }
+        callDeezer<PaginatedResult<DeezerArtist>>({
+            apiPath: `/search/artist`,
+            accessToken: data.session.token?.access_token,
+            searchParams: {q: $artistSearch}
+        }).then(searchResult => {
+            const options = searchResult.data.map(artist => ({label: `<img src="${artist.picture_small}" class="mx-2"/> ${artist.name}`, value: artist.id}));
+            set(options)
+        });
+    })
+
 </script>
+
+<!--<input-->
+<!--        class="input autocomplete"-->
+<!--        type="search"-->
+<!--        bind:value={$artistSearch}-->
+<!--        placeholder="Search..."-->
+<!--        use:popup={popupSettings}-->
+<!--/>-->
+
+
+
+<!--<div data-popup="popupAutocomplete" class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">-->
+<!--<Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection} />-->
+<!--</div>-->
+
+<input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..." />
+<div class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
+    <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
+</div>
 
 <AppBar>
     <svelte:fragment slot="lead"><img src={data.playlist.picture_small} alt="playlist cover" aria-describedby="{data.playlist.id}_title"/></svelte:fragment>
@@ -156,6 +207,7 @@
         </li>
     {/each}
 </ul>
+
 
 <label class="label">
     <div class="flex place-content-between">
