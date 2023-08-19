@@ -35,16 +35,16 @@ export async function load({parent, params}: PageLoadEvent) {
        // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
         .sort((a, b) => b.count - a.count)
 
-    // const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
-    //     const artist = await getDeezerArtist(topArtist.artist.id, accessToken);
-    //     const albums = await getDeezerArtistDiscography(topArtist.artist.id, accessToken);
-    //     return {artist, albums, count: topArtist.count}
-    // }));
+    const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
+        const artist = await getDeezerArtist(topArtist.artist.id, accessToken);
+        // const albums = await getDeezerArtistDiscography(topArtist.artist.id, accessToken);
+        return artist// {artist, albums, count: topArtist.count}
+    }));
 
 
     return {
         playlist: playlist,
-        topArtists: playlistTopArtists,
+        topArtists: topArtists,
     }
 
 }
