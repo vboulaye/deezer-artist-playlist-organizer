@@ -1,21 +1,21 @@
 <script lang="ts">
+    import {page} from "$app/stores";
     import AudioPlayer from "$lib/AudioPlayer.svelte";
-    import type {DeezerAlbum, DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
+    import type {DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
+    import {getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
     import type {DeezerSearchParams} from "$lib/DeezerCall";
     import {callDeezer} from "$lib/DeezerCall";
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
-    import {AppBar, popup, toastStore} from '@skeletonlabs/skeleton';
-    import type {PopupSettings} from '@skeletonlabs/skeleton';
+    import type {AutocompleteOption} from '@skeletonlabs/skeleton';
+    import {AppShell, AppBar, Autocomplete, toastStore} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
-    import {derived, writable} from "svelte/store";
     import type {Writable} from "svelte/store";
+    import {derived, writable} from "svelte/store";
     import IconDeezer from '~icons/jam/deezer-circle'
     import IconSave from '~icons/ph/cloud-check-bold'
     import type {PageData} from "./$types";
-    import {Autocomplete} from '@skeletonlabs/skeleton';
-    import type {AutocompleteOption} from '@skeletonlabs/skeleton';
 
     export let data: PageData
 
@@ -61,14 +61,11 @@
 
     let debug = false
 
-    function addArtistTracks(artist: DeezerArtist & {
-        albums: (DeezerAlbum & {
-            release_date: string
-            tracks: DeezerTrack[]
-        }) []
-    }) {
+    async function addArtistTracks(artistId: number) {
+        const albums = await getDeezerArtistDiscography(artistId, data.session.token?.access_token);
+
         trackSelections.update(trackSelectionsList => {
-            const allTracks = artist.albums
+            const allTracks = albums
                 .sort((a1, a2) => a1.release_date.localeCompare(a2.release_date))
                 .flatMap(album => {
                     console.log(album.title)
@@ -117,15 +114,11 @@
 
     let artistSearch = writable("")
 
-    function onArtistSelection(artist) {
-        console.log({artist})
+    function onArtistSelection(event: CustomEvent<AutocompleteOption>) {
+        const artist = event.detail.meta
+        addArtistTracks(artist)
     }
 
-    let popupSettings: PopupSettings = {
-        event: 'focus-click',
-        target: 'popupAutocomplete',
-        placement: 'bottom',
-    };
 
     const artistsFound = derived<Writable<string>, AutocompleteOption[]>(artistSearch, ($artistSearch, set) => {
         if (!$artistSearch) {
@@ -137,151 +130,157 @@
             accessToken: data.session.token?.access_token,
             searchParams: {q: $artistSearch}
         }).then(searchResult => {
-            const options = searchResult.data.map(artist => ({label: `<img src="${artist.picture_small}" class="mx-2"/> ${artist.name}`, value: artist.id}));
+            const options = searchResult.data.map(artist => ({label: `<img src="${artist.picture_small}" class="mx-2"/> ${artist.name}`, value: artist.id, meta: artist}));
             set(options)
         });
     })
 
 </script>
 
-<!--<input-->
-<!--        class="input autocomplete"-->
-<!--        type="search"-->
-<!--        bind:value={$artistSearch}-->
-<!--        placeholder="Search..."-->
-<!--        use:popup={popupSettings}-->
-<!--/>-->
 
+<AppShell slotSidebarLeft="mx-2" slotSidebarRight="mx-2">
+    <svelte:fragment slot="header">
+        <AppBar>
+            <svelte:fragment slot="lead"><img src={data.playlist.picture_small} alt="playlist cover"
+                                              aria-describedby="{data.playlist.id}_title"/></svelte:fragment>
+            <h1 id="{data.playlist.id}_title">Playlist: "{data.playlist.title}"</h1>
+        </AppBar>
+    </svelte:fragment>
+    <svelte:fragment slot="sidebarLeft">
+        <ul class="list">
 
-
-<!--<div data-popup="popupAutocomplete" class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">-->
-<!--<Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection} />-->
-<!--</div>-->
-
-<input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..." />
-<div class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
-    <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
-</div>
-
-<AppBar>
-    <svelte:fragment slot="lead"><img src={data.playlist.picture_small} alt="playlist cover" aria-describedby="{data.playlist.id}_title"/></svelte:fragment>
-    <h1 id="{data.playlist.id}_title">Playlist: "{data.playlist.title}"</h1>
-</AppBar>
-
-
-<form class="mb-10 space-y-2">
-
-    <label class="label">
-        <span>Title</span>
-        <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
-    </label>
-
-    <label class="label">
-        <span>Description</span>
-        <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
-    </label>
-
-    <div class="flex place-content-end">
-        <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>
-            <IconSave/>
-            <span>Update playlist</span>
-        </button>
-    </div>
-
-</form>
-
-
-<ul class="list">
-
-    {#each data.topArtists as topArtist, i}
-        <li>
+            {#each data.topArtists as topArtist, i}
+                <li>
         <span class="flex items-center space-x-2">
             <img src={topArtist.artist.picture_small} alt="{topArtist.artist.name}"/>
             <span>{topArtist.artist.name}</span>
             <a href={topArtist.artist.link} title="open artist in Deezer web interface">
                 <IconDeezer/>
             </a>
-            <span>({topArtist.albums.flatMap(x => x.tracks).length} tracks in {topArtist.albums.length} albums)</span>
-            <button class="btn variant-filled-tertiary" on:click={()=> addArtistTracks(topArtist)}>add artist albums</button>
+            <span>(#{$trackSelections.filter(t => t.track.artist.id === topArtist.artist.id).length})</span>
+            <button class="btn variant-filled-tertiary"
+                    on:click={()=> addArtistTracks(topArtist.artist.id)}>add </button>
         </span>
-        </li>
-    {/each}
-</ul>
+                </li>
+            {/each}
+        </ul>
 
+        <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
+        <div class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
+            <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
+        </div>
 
-<label class="label">
-    <div class="flex place-content-between">
-        <span>Tracks ({data.playlist.tracks.data.length})</span>
+    </svelte:fragment>
+    <svelte:fragment slot="sidebarRight">
+        <div class="flex place-content-end">
+            <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>
+                <IconSave/>
+                <span>Update playlist</span>
+            </button>
+        </div>
         <button class="btn variant-filled-secondary">
             <IconSave/>
             <span>Update Tracks</span>
         </button>
-        <span><!-- empty box to the right --></span>
-    </div>
-    <div class="table-container">
-        <table class="table">
-            <thead>
-            <tr class="center">
-                <th><input type="checkbox" class="checkbox"/></th>
-                <th>Pos.</th>
-                <th class="w-1/3">Title</th>
-                <th>Album</th>
-                <th>Artist</th>
-                <th>rank</th>
-                <th>duration</th>
-            </tr>
-            </thead>
-            <tbody>
-            {#each $trackSelections as trackSelection, i}
-                {@const row=trackSelection.track}
-                <tr class={computeRowClass(trackSelection)}
-                    class:!text-red-500={!row.readable}
-                >
-                    <Td><input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/></Td>
-                    <Td><span>{i + 1}</span></Td>
-                    <Td justify="start">
-                        <span>{row.title}</span>
-                        <a href={row.link} title="open track in Deezer web interface">
-                            <IconDeezer/>
-                        </a>
+        <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
 
-                    </Td>
-                    <Td justify="start">
-                        <img src={row.album.cover_small} alt="album cover"/>
-                        <span class="m-2">{row.album.title}</span>
-                        <a href="https://www.deezer.com/album/{row.album.id}" title="open album in Deezer web interface">
-                            <IconDeezer/>
-                        </a>
-                    </Td>
-                    <td> <span class="flex items-center">
+    </svelte:fragment>
+    <!-- (pageHeader) -->
+    <!-- Router Slot -->
+    <!--    <slot/>-->
+
+    <!-- ---- / ---- -->
+    <!-- (pageFooter) -->
+    <!-- (footer) -->
+
+
+    <form class="mb-10 space-y-2">
+
+        <label class="label">
+            <span>Title</span>
+            <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
+        </label>
+
+        <label class="label">
+            <span>Description</span>
+            <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
+        </label>
+
+    </form>
+
+
+    <label class="label">
+        <div class="flex place-content-between">
+            <span>Tracks ({data.playlist.tracks.data.length})</span>
+
+            <span><!-- empty box to the right --></span>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr class="center">
+                    <th><input type="checkbox" class="checkbox"/></th>
+                    <th>Pos.</th>
+                    <th class="w-1/3">Title</th>
+                    <th>Album</th>
+                    <th>Artist</th>
+                    <th>rank</th>
+                    <th>duration</th>
+                </tr>
+                </thead>
+                <tbody>
+                {#each $trackSelections as trackSelection, i}
+                    {@const row=trackSelection.track}
+                    <tr class={computeRowClass(trackSelection)}
+                        class:!text-red-500={!row.readable}
+                    >
+                        <Td><input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/></Td>
+                        <Td><span>{i + 1}</span></Td>
+                        <Td justify="start">
+                            <span>{row.title}</span>
+                            <a href={row.link} title="open track in Deezer web interface">
+                                <IconDeezer/>
+                            </a>
+
+                        </Td>
+                        <Td justify="start">
+                            <img src={row.album.cover_small} alt="album cover"/>
+                            <span class="m-2">{row.album.title}</span>
+                            <a href="https://www.deezer.com/album/{row.album.id}"
+                               title="open album in Deezer web interface">
+                                <IconDeezer/>
+                            </a>
+                        </Td>
+                        <td> <span class="flex items-center">
                             <span class="m-2"> {row.artist.name}</span>
                             <a href={row.artist.link} title="open artist in Deezer web interface">
                                 <IconDeezer/>
                             </a>
                             </span>
-                    </td>
+                        </td>
 
-                    <Td>{row.album.release_date}</Td>
-                    <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
-                        <span class="grow"></span>
-                        <AudioPlayer src={row.preview} enabled={row.readable}/>
-                    </Td>
-                </tr>
-            {/each}
-            </tbody>
-        </table>
-    </div>
+                        <Td>{row.album.release_date}</Td>
+                        <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
+                            <span class="grow"></span>
+                            <AudioPlayer src={row.preview} enabled={row.readable}/>
+                        </Td>
+                    </tr>
+                {/each}
+                </tbody>
+            </table>
+        </div>
 
-</label>
+    </label>
 
 
-<a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
-<pre id="showDebug">
+    <pre id="showDebug">
         { JSON.stringify({topArtists: data.topArtists}, null, 2)}
-    {#if debug}
+        {#if debug}
         { JSON.stringify({playlist: data.playlist}, null, 2)}
     {/if}
 </pre>
+</AppShell>
+
 
 <style>
     tr.center > td, tr.center > th {

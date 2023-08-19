@@ -47,7 +47,7 @@ export interface DeezerAlbum {
     cover_xl: string
     md5_image: string
     tracklist: string
-
+    release_date:string
     type: "album"
 }
 

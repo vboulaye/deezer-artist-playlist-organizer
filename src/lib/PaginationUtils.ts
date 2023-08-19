@@ -35,7 +35,7 @@ export function appendIndexToPaginationResults<T>(result: PaginatedResult<T>, st
 
 export async function getRemainingPages<T>(req: {
     apiPath: string,
-    accessToken: string,
+    accessToken?: string,
     index: number,
     limit: number,
 }): Promise<PaginatedResult<T>> {

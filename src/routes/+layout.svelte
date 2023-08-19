@@ -7,171 +7,50 @@
     import '@skeletonlabs/skeleton/styles/skeleton.css';
     // Finally, your application's global stylesheet (sometimes labeled 'app.css')
     import '../app.postcss';
-    import {Toast} from "@skeletonlabs/skeleton";
+    import {AppShell, AppBar, Toast} from "@skeletonlabs/skeleton";
+    import LoginStatus from "./LoginStatus.svelte";
 
     let showSession = false
 </script>
 
+<AppShell>
+    <svelte:fragment slot="header">
 
-<div>
-    <header>
-        <div class="signedInStatus">
-            <p class="nojs-show loaded">
-                {#if $page.data.session && $page.data.session?.token?.access_token}
-                    {#if $page.data.session.user?.picture}
-            <span
-                    style="background-image: url('{$page.data.session.user.picture}')"
-                    class="avatar"
-            />
-                    {/if}
-                    <span class="signedInText">
-            <small>Signed in as</small><br/>
-            <strong>{$page.data.session.user?.name}</strong>
-                        (until {$page.data.session.token.expiresOn})
-          </span>
-                    <a href="/auth/signout" class="button" data-sveltekit-preload-data="off">Sign out</a>
-                {:else}
-                    <span class="notSignedInText">You are not signed in</span>
+        <AppBar gridColumns="grid-cols-3" slotLead="place-content-start" slotTrail="place-content-end">
+            <svelte:fragment slot="lead">(icon)</svelte:fragment>
+            <nav>
+                <ul class="navItems">
+                    <li class="navItem"><a href="/">Home</a></li>
+                    <li class="navItem"><a href="/playlists">Playlists</a></li>
+                    <li class="navItem"><a href="#showSession" on:click={()=>showSession=!showSession}>{showSession ? 'hide session' : 'show session'}</a></li>
+                </ul>
+            </nav>
 
-                    <a href="/auth/signin" class="buttonPrimary" data-sveltekit-preload-data="off">Sign in</a>
-                {/if}
-            </p>
-        </div>
-        <nav>
-            <ul class="navItems">
-                <li class="navItem"><a href="/">Home</a></li>
-                <li class="navItem"><a href="/playlists">Playlists</a></li>
-                <li class="navItem"><a href="#showSession" on:click={()=>showSession=!showSession}>{showSession ? 'hide session' : 'show session'}</a></li>
-            </ul>
-        </nav>
-    </header>
+            <svelte:fragment slot="trail">
+                <LoginStatus/>
+            </svelte:fragment>
+        </AppBar>
+    </svelte:fragment>
+<!--    <svelte:fragment slot="sidebarLeft">Sidebar Left</svelte:fragment>-->
+
+<!--    <svelte:fragment slot="sidebarRight">Sidebar Right</svelte:fragment>-->
+    <!-- (pageHeader) -->
+    <!-- Router Slot -->
+    <slot/>
 
     {#if showSession}
         <pre id="showSession">
             { JSON.stringify($page.data.session, null, 2)}
         </pre>
     {/if}
+    <!-- ---- / ---- -->
+    <!-- (pageFooter) -->
+    <!-- (footer) -->
+</AppShell>
 
-    <slot/>
-</div>
-
-
-<Toast />
+<Toast/>
 
 <style>
-    :global(body) {
-        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
-        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-        "Noto Color Emoji";
-        padding: 0 1rem 1rem 1rem;
-        max-width: 80%;
-        margin: 0 auto;
-        background: #fff;
-        color: #333;
-    }
-
-    :global(li),
-    :global(p) {
-        line-height: 1.5rem;
-    }
-
-    :global(a) {
-        font-weight: 500;
-    }
-
-    :global(hr) {
-        border: 1px solid #ddd;
-    }
-
-    :global(iframe) {
-        background: #ccc;
-        border: 1px solid #ccc;
-        height: 10rem;
-        width: 100%;
-        border-radius: 0.5rem;
-        filter: invert(1);
-    }
-
-    .nojs-show {
-        opacity: 1;
-        top: 0;
-    }
-
-    .signedInStatus {
-        display: block;
-        min-height: 4rem;
-        width: 100%;
-    }
-
-    .loaded {
-        position: relative;
-        top: 0;
-        opacity: 1;
-        overflow: hidden;
-        border-radius: 0 0 0.6rem 0.6rem;
-        padding: 0.6rem 1rem;
-        margin: 0;
-        background-color: rgba(0, 0, 0, 0.05);
-        transition: all 0.2s ease-in;
-    }
-
-    .signedInText,
-    .notSignedInText {
-        position: absolute;
-        padding-top: 0.8rem;
-        left: 1rem;
-        right: 6.5rem;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        display: inherit;
-        z-index: 1;
-        line-height: 1.3rem;
-    }
-
-    .signedInText {
-        padding-top: 0rem;
-        left: 4.6rem;
-    }
-
-    .avatar {
-        border-radius: 2rem;
-        float: left;
-        height: 2.8rem;
-        width: 2.8rem;
-        background-color: white;
-        background-size: cover;
-        background-repeat: no-repeat;
-    }
-
-    .button,
-    .buttonPrimary {
-        float: right;
-        margin-right: -0.4rem;
-        font-weight: 500;
-        border-radius: 0.3rem;
-        cursor: pointer;
-        font-size: 1rem;
-        line-height: 1.4rem;
-        padding: 0.7rem 0.8rem;
-        position: relative;
-        z-index: 10;
-        background-color: transparent;
-        color: #555;
-    }
-
-    .buttonPrimary {
-        background-color: #346df1;
-        border-color: #346df1;
-        color: #fff;
-        text-decoration: none;
-        padding: 0.7rem 1.4rem;
-    }
-
-    .buttonPrimary:hover {
-        box-shadow: inset 0 0 5rem rgba(0, 0, 0, 0.2);
-    }
 
     .navItems {
         margin-bottom: 2rem;

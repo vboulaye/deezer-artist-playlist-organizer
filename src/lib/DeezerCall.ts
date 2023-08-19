@@ -11,7 +11,9 @@ async function fetchDeezer(url: URL) {
         url.searchParams.set("output", "jsonp")
         LOGGER({fetchJsonp: url.toString()})
         console.log(url.toString())
-        const response = await fetchJsonp(url.toString());
+        const response = await fetchJsonp(url.toString(), {
+            timeout: 10000,
+        })
         if (!response.ok) {
             throw error(500, "error in jsonp call " + url.pathname)
         }
@@ -22,7 +24,9 @@ async function fetchDeezer(url: URL) {
     }
 }
 
-export interface DeezerSearchParams { [k: string]: string|number|boolean }
+export interface DeezerSearchParams {
+    [k: string]: string | number | boolean
+}
 
 export async function callDeezer<T>(req: {
     apiPath: string,
@@ -38,7 +42,7 @@ export async function callDeezer<T>(req: {
     if (req.searchParams) {
         Object.entries(req.searchParams)
             .forEach(([key, value]) => {
-                url.searchParams.set(key, ""+value)
+                url.searchParams.set(key, "" + value)
             })
     }
 

@@ -1,4 +1,5 @@
 import type {DeezerAlbum, DeezerArtist, DeezerPlaylistDetails} from "$lib/DeezerApiModel";
+import {getDeezerArtist, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
 import {callDeezer} from "$lib/DeezerCall";
 import {getRemainingPages} from "$lib/PaginationUtils";
 import type {PaginatedResult} from "$lib/PaginationUtils";
@@ -31,43 +32,19 @@ export async function load({parent, params}: PageLoadEvent) {
         }, {} as { [k: number]: { artist: DeezerArtist, count: number } });
 
     const playlistTopArtists = Object.values(artistsById)
-        .filter(artist => artist.count >= playlist.tracks.data.length / 3)
+       // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
         .sort((a, b) => b.count - a.count)
 
-    const topArtists =   Promise.all(playlistTopArtists.map(async topArtist => {
-        const fullArtist = await callDeezer<DeezerArtist>({
-            apiPath: "/artist/" + topArtist.artist.id,
-            accessToken: accessToken,
-        });
-        const fullArtistAlbums = await getRemainingPages<PaginatedResult<DeezerAlbum>>({
-            apiPath: "/artist/" + topArtist.artist.id + "/albums",
-            accessToken: accessToken,
-            index:0,
-            limit:100
-        })
-
-        const fullAlbumsWithTracks = await Promise.all(fullArtistAlbums.data.map(async album => {
-            const tracks = await getRemainingPages<PaginatedResult<DeezerAlbum>>({
-                apiPath: "/album/" + album.id + "/tracks",
-                accessToken: accessToken,
-                index:0,
-                limit:100,
-            })
-            return {
-                ...album,
-                tracks: tracks.data
-            }
-        }))
-
-
-        return {artist:fullArtist, albums: fullAlbumsWithTracks, count: topArtist.count}
-
-    }));
+    // const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
+    //     const artist = await getDeezerArtist(topArtist.artist.id, accessToken);
+    //     const albums = await getDeezerArtistDiscography(topArtist.artist.id, accessToken);
+    //     return {artist, albums, count: topArtist.count}
+    // }));
 
 
     return {
         playlist: playlist,
-        topArtists: topArtists,
+        topArtists: playlistTopArtists,
     }
 
 }
