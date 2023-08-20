@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {page} from "$app/stores";
     import AudioPlayer from "$lib/AudioPlayer.svelte";
     import type {DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
     import {getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
@@ -8,7 +7,7 @@
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {AppShell, AppBar, Autocomplete, toastStore} from '@skeletonlabs/skeleton';
+    import {AppShell, Autocomplete, toastStore} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
@@ -277,5 +276,8 @@
 
     :global(.h-100vh) {
         height: 100vh
+    }
+    :global(.w-100vw) {
+        width: 100vw
     }
 </style>

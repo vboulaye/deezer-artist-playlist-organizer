@@ -33,7 +33,7 @@
                 <td>
                     <a href="playlists/{row.id}" data-sveltekit-preload-data="off">
                         <div class="flex items-center">
-                            <img src={row.picture_small} alt="playlist cover" aria-describedby="{row.id}_title"/>
+                            <img src={row.picture_small} alt="playlist cover" aria-describedby="{row.id}_title" class="deezer_img_small"/>
                             <strong id="{row.id}_title" class="m-2">{row.title}</strong>
                         </div>
                     </a>

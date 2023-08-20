@@ -1,23 +1,39 @@
 <script lang="ts">
-    import {page} from "$app/stores"
+    // This contains the bulk of Skeletons required styles:
+    import '@skeletonlabs/skeleton/styles/skeleton.css';
 
     // Your selected Skeleton theme:
     import '@skeletonlabs/skeleton/themes/theme-gold-nouveau.css';
-    // This contains the bulk of Skeletons required styles:
-    import '@skeletonlabs/skeleton/styles/skeleton.css';
     // Finally, your application's global stylesheet (sometimes labeled 'app.css')
     import '../app.postcss';
-    import {AppShell, AppBar, Toast} from "@skeletonlabs/skeleton";
+    import {beforeNavigate} from "$app/navigation";
+    import {navigating} from "$app/stores";
+
+    import {AppBar, AppShell, Toast} from "@skeletonlabs/skeleton";
+    import IconLogo from '~icons/ph/playlist-bold'
+    import LoadingVeil from "./LoadingVeil.svelte";
+
     import LoginStatus from "./LoginStatus.svelte";
+    import PageTransition from "./PageTransition.svelte";
 
     export let data
+    beforeNavigate(x => {
+
+    })
+
 </script>
+
+<LoadingVeil/>
 
 <AppShell>
     <svelte:fragment slot="header">
 
         <AppBar gridColumns="grid-cols-3" slotLead="place-content-start" slotTrail="place-content-end">
-            <svelte:fragment slot="lead">(icon)</svelte:fragment>
+            <svelte:fragment slot="lead">
+                <a href="/">
+                    <IconLogo/>
+                </a>
+            </svelte:fragment>
             <nav>
                 <ul class="navItems">
                     <li class="navItem"><a href="/">Home</a></li>
@@ -26,23 +42,24 @@
             </nav>
 
             <svelte:fragment slot="trail">
-                <LoginStatus currentUser={data.currentUser}/>
+                <LoginStatus/>
             </svelte:fragment>
         </AppBar>
     </svelte:fragment>
     <!--    <svelte:fragment slot="sidebarLeft">Sidebar Left</svelte:fragment>-->
 
-    <!--    <svelte:fragment slot="sidebarRight">Sidebar Right</svelte:fragment>-->
-    <!-- (pageHeader) -->
-    <!-- Router Slot -->
-    <slot/>
+    <PageTransition pathname={data.pathname}>
+        <!--    <svelte:fragment slot="sidebarRight">Sidebar Right</svelte:fragment>-->
+        <!-- (pageHeader) -->
+        <!-- Router Slot -->
+        <slot/>
+    </PageTransition>
 
 
     <!-- ---- / ---- -->
     <!-- (pageFooter) -->
     <!-- (footer) -->
 </AppShell>
-
 <Toast/>
 
 <style>
