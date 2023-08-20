@@ -1,11 +1,14 @@
 <script lang="ts">
-    import {browser} from "$app/environment";
-    import {page} from "$app/stores"
-    import {callDeezer} from "$lib/DeezerCall";
-    import {writable} from "svelte/store";
+
+    import {goto} from "$app/navigation";
+    import {page} from "$app/stores";
+
+    if ($page.data.currentUser) {
+        goto("/playlists")
+    }
 
 </script>
-
-
-<h1>Welcome to the Deezer playlist Organizer</h1>
-
+{#if !$page.data.currentUser}
+    <h1>Welcome to the Deezer playlist Organizer</h1>
+    <p>Please signin using your Deezer Account in order to view/edit your playlists.</p>
+{/if}

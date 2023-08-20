@@ -4,19 +4,72 @@
     import {getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
     import type {DeezerSearchParams} from "$lib/DeezerCall";
     import {callDeezer} from "$lib/DeezerCall";
+    import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {AppShell, Autocomplete, toastStore} from '@skeletonlabs/skeleton';
+    import {Autocomplete, toastStore} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
     import {derived, writable} from "svelte/store";
     import IconDeezer from '~icons/jam/deezer-circle'
     import IconSave from '~icons/ph/cloud-check-bold'
+    import RemoveIcon from '~icons/ph/minus-circle-bold';
+    import AddIcon from '~icons/ph/plus-circle-bold';
+    import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
+    import SortDescendingIcon from '~icons/ph/sort-descending-bold';
+    import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
 
     export let data: PageData
+
+    const playlistArtists = writable(data.topArtists)
+
+    interface PlaylistArtistsSort {
+        ascending: boolean
+        orderBy: "trackCount" | "alphabetical"
+    }
+
+    const playlistArtistsSort: PlaylistArtistsSort = {
+        ascending: false,
+        orderBy: "trackCount"
+    }
+
+    function sortArtists(newSort: Partial<PlaylistArtistsSort>) {
+        if (newSort.ascending !== undefined) {
+            playlistArtistsSort.ascending = newSort.ascending
+        }
+        if (newSort.orderBy !== undefined) {
+            playlistArtistsSort.orderBy = newSort.orderBy
+        }
+        playlistArtists.update(playlistArtists => {
+            const direction = playlistArtistsSort.ascending ? 1 : -1;
+
+
+            type Comparison = (a1: DeezerArtist, a2: DeezerArtist) => number
+            const compareTrackCount = (a1: DeezerArtist, a2: DeezerArtist) => (getTrackCount(a1.id) - getTrackCount(a2.id))
+            const compareName = (a1: DeezerArtist, a2: DeezerArtist) => (a1.name.localeCompare(a2.name))
+
+            const compare = (main: Comparison, second: Comparison) => (a1: DeezerArtist, a2: DeezerArtist) => {
+                const mainCompare = main(a1, a2);
+                if (mainCompare === 0) {
+                    return second(a1, a2);
+                }
+                return mainCompare
+            }
+
+            const deezerArtists = [...playlistArtists].sort((a1, a2) => {
+                switch (playlistArtistsSort.orderBy) {
+                    case "trackCount":
+                        return direction * compare(compareTrackCount, compareName)(a1, a2)
+                    case "alphabetical":
+                        return direction * compare(compareName, compareTrackCount,)(a1, a2)
+                }
+            });
+            return deezerArtists
+        })
+    }
 
     interface TrackSelection {
         track: DeezerTrack
@@ -34,7 +87,7 @@
             searchParams.title = data.playlist.title
         }
         if (data.playlist.description) {
-            searchParams.title = data.playlist.description
+            searchParams.description = data.playlist.description
         }
         if (data.playlist.public) {
             searchParams.public = data.playlist.public
@@ -57,7 +110,20 @@
         }
     }
 
+
     let debug = false
+
+    function removeArtistTracks(artistId: number) {
+        trackSelections.update(trackSelectionsList => {
+            trackSelectionsList
+                .forEach(trackSelection => {
+                    if (trackSelection.track.artist.id === artistId) {
+                        trackSelection.selected = false
+                    }
+                })
+            return trackSelectionsList
+        })
+    }
 
     async function addArtistTracks(artistId: number) {
         const albums = await getDeezerArtistDiscography(artistId);
@@ -131,31 +197,62 @@
         });
     })
 
+    function getTrackCount(artistId: number): number {
+        return $trackSelections.filter(t => t.track.artist.id === artistId && t.selected).length
+    }
+
 </script>
 
 
-<AppShell slotSidebarLeft="mx-2 h-100vh overflow-scroll" slotSidebarRight="mx-2 h-100vh overflow-scroll" slotPageContent="h-100vh overflow-scroll">
-    <!--    <svelte:fragment slot="header">-->
-    <!--        <AppBar>-->
-    <!--            <svelte:fragment slot="lead"><img src={data.playlist.picture_small} alt="playlist cover"-->
-    <!--                                              aria-describedby="{data.playlist.id}_title"/></svelte:fragment>-->
-    <!--            <h1 id="{data.playlist.id}_title">Playlist: "{data.playlist.title}"</h1>-->
-    <!--        </AppBar>-->
-    <!--    </svelte:fragment>-->
+<PlaylistApplicationShell>
     <svelte:fragment slot="sidebarLeft">
+           <span class="flex flex-row justify-between w-full items-center space-x-2">
+                     <HorizontalSpan><h4>Playlists Artists
+             </h4></HorizontalSpan>
+            <HorizontalSpan>
+                {#if playlistArtistsSort.orderBy === "trackCount"}
+                    <button on:click={()=> sortArtists({orderBy:"alphabetical"})}>
+                        # tracks
+                    </button>
+                  {:else if playlistArtistsSort.orderBy === "alphabetical" }
+                    <button on:click={()=> sortArtists({orderBy:"trackCount"})}>
+                        alphabetical
+                    </button>
+                {/if}
+                {#if playlistArtistsSort.ascending}
+                    <button on:click={()=> sortArtists({ascending:false})}>
+                        <SortAscendingIcon/>
+                    </button>
+                {:else}
+                    <button on:click={()=> sortArtists({ascending:true})}>
+                        <SortDescendingIcon/>
+                    </button>
+                {/if}
+            </HorizontalSpan>
+           </span>
         <ul class="list">
-            {#each data.topArtists as topArtist, i}
+            {#each $playlistArtists as topArtist, i}
+                {@const trackCount=getTrackCount(topArtist.id)}
                 <li>
-        <span class="flex items-center space-x-2">
-            <img src={topArtist.picture_small} alt="{topArtist.name}"/>
-            <span>{topArtist.name}</span>
-            <a href={topArtist.link} title="open artist in Deezer web interface">
-                <IconDeezer/>
-            </a>
-            <span>(#{$trackSelections.filter(t => t.track.artist.id === topArtist.id).length})</span>
-            <button class="btn variant-filled-tertiary"
-                    on:click={()=> addArtistTracks(topArtist.id)}>add </button>
-        </span>
+                    <span class="flex flex-row justify-between w-full items-center space-x-2">
+                        <HorizontalSpan>
+                            <img src={topArtist.picture_small} alt="{topArtist.name}"/>
+                            <span>{topArtist.name}</span>
+                            <small title="artist has {trackCount} tracks in the playlist ">(#{trackCount})</small>
+                            <a href={topArtist.link} title="open artist in Deezer web interface">
+                                <IconDeezer/>
+                            </a>
+                        </HorizontalSpan>
+                        <HorizontalSpan>
+                            <button class="btn-icon btn-icon-sm "
+                                    title="add all artist titles to the playlist"
+                                    on:click={()=> addArtistTracks(topArtist.id)}><AddIcon/></button>
+                            <button class="btn-icon btn-icon-sm "
+                                    class:text-gray-500={trackCount===0}
+                                    title="remove all artist titles to the playlist"
+                                    on:click={()=> removeArtistTracks(topArtist.id)}><RemoveIcon/></button>
+                        </HorizontalSpan>
+                    </span>
                 </li>
             {/each}
         </ul>
@@ -180,93 +277,91 @@
         <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
     </svelte:fragment>
 
-        <form class="mb-10 space-y-2">
-
-            <label class="label">
-                <span>Title</span>
-                <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
-            </label>
-
-            <label class="label">
-                <span>Description</span>
-                <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
-            </label>
-
-        </form>
-
+    <form class="mb-10 space-y-2">
 
         <label class="label">
-            <div class="flex place-content-between">
-                <span>Tracks ({data.playlist.tracks.data.length})</span>
+            <span>Title</span>
+            <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
+        </label>
 
-                <span><!-- empty box to the right --></span>
-            </div>
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                    <tr class="center">
-                        <th><input type="checkbox" class="checkbox"/></th>
-                        <th>Pos.</th>
-                        <th class="w-1/3">Title</th>
-                        <th>Album</th>
-                        <th>Artist</th>
-                        <th>rank</th>
-                        <th>duration</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {#each $trackSelections as trackSelection, i}
-                        {@const row=trackSelection.track}
-                        <tr class={computeRowClass(trackSelection)}
-                            class:!text-red-500={!row.readable}
-                        >
-                            <Td><input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/></Td>
-                            <Td><span>{i + 1}</span></Td>
-                            <Td justify="start">
-                                <span>{row.title}</span>
-                                <a href={row.link} title="open track in Deezer web interface">
-                                    <IconDeezer/>
-                                </a>
+        <label class="label">
+            <span>Description</span>
+            <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
+        </label>
 
-                            </Td>
-                            <Td justify="start">
-                                <img src={row.album.cover_small} alt="album cover"/>
-                                <span class="m-2">{row.album.title}</span>
-                                <a href="https://www.deezer.com/album/{row.album.id}"
-                                   title="open album in Deezer web interface">
-                                    <IconDeezer/>
-                                </a>
-                            </Td>
-                            <td> <span class="flex items-center">
+    </form>
+
+    <label class="label">
+        <div class="flex place-content-between">
+            <span>Tracks ({data.playlist.tracks.data.length})</span>
+
+            <span><!-- empty box to the right --></span>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr class="center">
+                    <th><input type="checkbox" class="checkbox"/></th>
+                    <th>Pos.</th>
+                    <th class="w-1/3">Title</th>
+                    <th>Album</th>
+                    <th>Artist</th>
+                    <th>rank</th>
+                    <th>duration</th>
+                </tr>
+                </thead>
+                <tbody>
+                {#each $trackSelections as trackSelection, i}
+                    {@const row=trackSelection.track}
+                    <tr class={computeRowClass(trackSelection)}
+                        class:!text-red-500={!row.readable}
+                    >
+                        <Td><input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/></Td>
+                        <Td><span>{i + 1}</span></Td>
+                        <Td justify="start">
+                            <span>{row.title}</span>
+                            <a href={row.link} title="open track in Deezer web interface">
+                                <IconDeezer/>
+                            </a>
+
+                        </Td>
+                        <Td justify="start">
+                            <img src={row.album.cover_small} alt="album cover"/>
+                            <span class="m-2">{row.album.title}</span>
+                            <a href="https://www.deezer.com/album/{row.album.id}"
+                               title="open album in Deezer web interface">
+                                <IconDeezer/>
+                            </a>
+                        </Td>
+                        <td> <span class="flex items-center">
                                 <span class="m-2"> {row.artist.name}</span>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
                                     <IconDeezer/>
                                 </a>
                                 </span>
-                            </td>
+                        </td>
 
-                            <Td>{row.album.release_date}</Td>
-                            <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
-                                <span class="grow"></span>
-                                <AudioPlayer src={row.preview} enabled={row.readable}/>
-                            </Td>
-                        </tr>
-                    {/each}
-                    </tbody>
-                </table>
-            </div>
+                        <Td>{row.album.release_date}</Td>
+                        <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
+                            <span class="grow"></span>
+                            <AudioPlayer src={row.preview} enabled={row.readable}/>
+                        </Td>
+                    </tr>
+                {/each}
+                </tbody>
+            </table>
+        </div>
 
-        </label>
+    </label>
 
 
-        <pre id="showDebug">
-            { JSON.stringify({topArtists: data.topArtists}, null, 2)}
-            {#if debug}
+    <pre id="showDebug">
+            { JSON.stringify({topArtists: $playlistArtists}, null, 2)}
+        {#if debug}
                 { JSON.stringify({playlist: data.playlist}, null, 2)}
             {/if}
         </pre>
-</AppShell>
-
+</PlaylistApplicationShell>
 
 <style>
     tr.center > td, tr.center > th {
@@ -277,6 +372,7 @@
     :global(.h-100vh) {
         height: 100vh
     }
+
     :global(.w-100vw) {
         width: 100vw
     }

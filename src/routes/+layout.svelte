@@ -7,7 +7,7 @@
     // Finally, your application's global stylesheet (sometimes labeled 'app.css')
     import '../app.postcss';
     import {beforeNavigate} from "$app/navigation";
-    import {navigating} from "$app/stores";
+    import {navigating, page} from "$app/stores";
 
     import {AppBar, AppShell, Toast} from "@skeletonlabs/skeleton";
     import IconLogo from '~icons/ph/playlist-bold'
@@ -36,8 +36,12 @@
             </svelte:fragment>
             <nav>
                 <ul class="navItems">
-                    <li class="navItem"><a href="/">Home</a></li>
-                    <li class="navItem"><a href="/playlists">Playlists</a></li>
+                    {#if $page.data.currentUser}
+                        <li class="navItem"><a href="/playlists">Your Playlists</a></li>
+                        <li class="navItem"><a href="/playlists?action=new">Create new Playlist</a></li>
+                    {:else }
+                        <li class="navItem"><a href="/">Home</a></li>
+                    {/if}
                 </ul>
             </nav>
 
