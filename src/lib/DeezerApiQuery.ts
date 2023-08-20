@@ -20,7 +20,9 @@ export async function getDeezerArtist(artistId: number): Promise<DeezerArtist> {
 
 
 export interface DeezerAlbumWithTracks extends DeezerAlbum {
-    tracks: DeezerTrack[]
+    tracks: (DeezerTrack & {
+        isrc: string
+    })[]
 }
 
 export async function getDeezerArtistDiscography(artistId: number): Promise<DeezerAlbumWithTracks[]> {
@@ -36,7 +38,9 @@ export async function getDeezerArtistDiscography(artistId: number): Promise<Deez
     })
 
     const albums = await Promise.all(allArtistAlbums.data.map(async album => {
-        const tracks = await getRemainingPages<DeezerTrack>({
+        const tracks = await getRemainingPages<DeezerTrack & {
+            isrc:string
+        }>({
             apiPath: "/album/" + album.id + "/tracks",
             index: 0,
             limit: 100,

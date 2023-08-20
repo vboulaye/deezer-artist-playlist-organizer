@@ -11,6 +11,7 @@ export const ssr = false
 export async function load({url}: PageLoadEvent) {
 
     const startIndex = extractPaginationIndex(url);
+
     const search = url.searchParams.get("search");
 
     if (search) {

@@ -17,9 +17,6 @@
     import PageTransition from "./PageTransition.svelte";
 
     export let data
-    beforeNavigate(x => {
-
-    })
 
 </script>
 
@@ -38,7 +35,7 @@
                 <ul class="navItems">
                     {#if $page.data.currentUser}
                         <li class="navItem"><a href="/playlists">Your Playlists</a></li>
-                        <li class="navItem"><a href="/playlists?action=new">Create new Playlist</a></li>
+                        <li class="navItem"><a href="/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>
                     {:else }
                         <li class="navItem"><a href="/">Home</a></li>
                     {/if}

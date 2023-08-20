@@ -12,13 +12,15 @@
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
-    import {derived, writable} from "svelte/store";
+    import {derived, get, writable} from "svelte/store";
     import IconDeezer from '~icons/jam/deezer-circle'
     import IconSave from '~icons/ph/cloud-check-bold'
     import RemoveIcon from '~icons/ph/minus-circle-bold';
     import AddIcon from '~icons/ph/plus-circle-bold';
     import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
     import SortDescendingIcon from '~icons/ph/sort-descending-bold';
+    import ClearPlaylistIcon from '~icons/ph/backspace-bold';
+    import RelinkTracksIcon from '~icons/ph/link-bold';
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
 
@@ -110,6 +112,147 @@
         }
     }
 
+    async function saveTracks() {
+        const trackIds = $trackSelections
+            .filter(trackSelection => trackSelection.selected)
+            .map(trackSelection => trackSelection.track.id)
+            .join(",");
+
+        try {
+            const updateResult = await callDeezer({
+                apiPath: `/playlist/${data.playlist.id}/tracks`,
+                searchParams: {
+                    request_method: "POST",
+                    songs: trackIds,
+                    order: trackIds,
+                }
+            });
+            toastStore.trigger({
+                message: `Updated playlist tracks order : ${updateResult ? "OK" : "KO"}`,
+                timeout: 3000
+            });
+        } catch (e) {
+            toastStore.trigger({
+                message: `Updated playlist tracks: error ${e}`,
+                timeout: 3000
+            });
+        }
+    }
+
+    async function getAlternativeTrack(unreadableTrack: DeezerTrack): Promise<DeezerTrack | undefined> {
+        const deezerArtistDiscography = await getDeezerArtistDiscography(unreadableTrack.artist.id);
+        if (!deezerArtistDiscography) {
+            toastStore.trigger({
+                message: `Could not find artist ${unreadableTrack.artist.name}`,
+                timeout: 3000
+            });
+            return undefined
+        }
+
+
+        const artistTracks = deezerArtistDiscography
+            .flatMap(album => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const {tracks: _, ...parentAlbum} = album
+                return album.tracks
+                    .map(track => ({...track, album: parentAlbum}));
+            });
+
+        const comparisonOptions = {sensitivity: "base", ignorePunctuation: true, numeric: false, usage: "search"} as Intl.CollatorOptions;
+
+        const matchingTracksByTitle = artistTracks
+            .filter(track => track.title.localeCompare(unreadableTrack.title, undefined, comparisonOptions) === 0)
+
+
+        switch (matchingTracksByTitle.length) {
+            case 0:
+                console.log("no match by title", {unreadableTrack})
+                toastStore.trigger({
+                    message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}'`,
+                    timeout: 3000
+                });
+                return undefined
+            case 1:
+                return matchingTracksByTitle[0]
+
+            default: {
+                const tracksByIsrc = Object.values(matchingTracksByTitle.reduce((acc, track) => {
+                    acc[track.isrc] = track;
+                    return acc
+                }, {} as any));
+                if (tracksByIsrc.length === 1) {
+                    return tracksByIsrc[0]
+                }
+                const matchingTracksByTitleAndAlbum = matchingTracksByTitle
+                    .filter(track => track.album.title.localeCompare(unreadableTrack.album.title, undefined, comparisonOptions) === 0)
+                switch (matchingTracksByTitleAndAlbum.length) {
+                    case 0:
+                        console.log("no match by title and album", {unreadableTrack})
+                        toastStore.trigger({
+                            message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}'`,
+                            timeout: 3000
+                        });
+                        return undefined
+                    case 1:
+                        return matchingTracksByTitleAndAlbum[0]
+
+                    default: {
+                        const tracksByIsrc = Object.values(matchingTracksByTitleAndAlbum.reduce((acc, track) => {
+                            acc[track.isrc] = track;
+                            return acc
+                        }, {} as any));
+                        if (tracksByIsrc.length === 1) {
+                            return tracksByIsrc[0]
+                        }
+                        console.log("multple match by title", {unreadableTrack, matchingTracksByTitleAndAlbum})
+
+                        toastStore.trigger({
+                            message: `Found multiple matching tracks for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' : ${matchingTracksByTitleAndAlbum.map(x => x.id)}`,
+                            timeout: 3000
+                        });
+                        return undefined;
+
+                    }
+                }
+            }
+
+        }
+
+    }
+
+    async function relinkNonReadableTracks() {
+        const trackSelectionsList = get(trackSelections);
+        const readableBefore = trackSelectionsList.filter(x => x.track.readable).length;
+        for (const trackSelection of trackSelectionsList) {
+            const unreadableTrack = trackSelection.track;
+            if (!unreadableTrack.readable) {
+                const alternativeTrack = await getAlternativeTrack(unreadableTrack);
+                if (alternativeTrack) {
+                    trackSelection.track = alternativeTrack
+                }
+            }
+        }
+        const readableAfter = trackSelectionsList.filter(x => x.track.readable).length;
+        toastStore.trigger({
+            message: `Reattached ${readableAfter - readableBefore} track(s) to readable equivalents.<br/>(${trackSelectionsList.length - readableAfter} unreadable track remaining)`,
+            timeout: 10000
+        });
+        trackSelections.set(trackSelectionsList)
+
+    }
+
+    function purgePlaylist() {
+        trackSelections.update(trackSelectionsList => {
+            const clearedSelections = trackSelectionsList
+                .filter(trackSelection => trackSelection.selected);
+            toastStore.trigger({
+                message: `Removed ${trackSelectionsList.length - clearedSelections.length} track(s) from the playlist`,
+                timeout: 3000
+            });
+            return clearedSelections
+        })
+    }
+
 
     let debug = false
 
@@ -178,10 +321,9 @@
     let artistSearch = writable("")
 
     function onArtistSelection(event: CustomEvent<AutocompleteOption>) {
-        const artistId = event.detail.value
+        const artistId = event.detail.value as number
         addArtistTracks(artistId)
     }
-
 
     const artistsFound = derived<Writable<string>, AutocompleteOption[]>(artistSearch, ($artistSearch, set) => {
         if (!$artistSearch) {
@@ -219,14 +361,14 @@
             </span>
 
             <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
-            <div class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
+            <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
                 <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
-            </div>
+            </span>
 
         </span>
 
         <span class="flex justify-between w-full items-center space-x-2 my-4">
-            <HorizontalSpan><h4>Playlists Artists             </h4></HorizontalSpan>
+            <HorizontalSpan><h4>Playlists Artists</h4></HorizontalSpan>
             <HorizontalSpan>
                 {#if playlistArtistsSort.orderBy === "trackCount"}
                     <button on:click={()=> sortArtists({orderBy:"alphabetical"})}>
@@ -249,7 +391,7 @@
             </HorizontalSpan>
            </span>
         <ul class="list">
-            {#each $playlistArtists as topArtist, i}
+            {#each $playlistArtists as topArtist}
                 {@const trackCount=getTrackCount(topArtist.id)}
                 <li>
                     <span class="flex flex-row justify-between w-full items-center space-x-2">
@@ -267,7 +409,7 @@
                                     on:click={()=> addArtistTracks(topArtist.id)}><AddIcon/></button>
                             <button class=""
                                     class:text-gray-500={trackCount===0}
-                                    title="remove all artist titles to the playlist"
+                                    title="deselect all artist titles from the playlist"
                                     on:click={()=> removeArtistTracks(topArtist.id)}><RemoveIcon/></button>
                         </HorizontalSpan>
                     </span>
@@ -278,17 +420,31 @@
 
     </svelte:fragment>
     <svelte:fragment slot="sidebarRight">
-        <div class="flex place-content-end">
+        <div class="flex flex-col gap-y-4 w-4/5">
+            <h3>Save to Deezer</h3>
             <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>
                 <IconSave/>
-                <span>Update playlist</span>
+                <span>Update playlist info</span>
             </button>
+
+            <button class="btn variant-filled-secondary" on:click|preventDefault={saveTracks}>
+                <IconSave/>
+                <span>Update Tracks</span>
+            </button>
+
+            <h3>Prepare playlist</h3>
+            <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks} title="trye to find equivalent of tracks that are not readable anymore">
+                <RelinkTracksIcon/>
+                <span>retrieve non readable tracks</span>
+            </button>
+            <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist} title="clear de-selected tracks">
+                <ClearPlaylistIcon/>
+                <span>clear de-selected tracks</span>
+            </button>
+
+            <!--        <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>-->
+
         </div>
-        <button class="btn variant-filled-secondary">
-            <IconSave/>
-            <span>Update Tracks</span>
-        </button>
-        <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
     </svelte:fragment>
 
     <form class="mb-10 space-y-2">
@@ -302,14 +458,28 @@
             <span>Description</span>
             <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
         </label>
-
+        <div class="flex place-content-start">
+            <!--            <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>-->
+            <!--                <IconSave/>-->
+            <!--                <span>Update playlist info</span>-->
+            <!--            </button>-->
+        </div>
     </form>
 
     <label class="label">
-        <div class="flex place-content-between">
-            <span>Tracks ({data.playlist.tracks.data.length})</span>
+        <div class="flex justify-between w-full items-center space-x-2 my-4">
 
-            <span><!-- empty box to the right --></span>
+            <span>Tracks ({data.playlist.tracks.data.length})</span>
+            <span>
+<!--                <button class="btn variant-filled-secondary">-->
+                <!--                    <IconSave/>-->
+                <!--                    <span>Update Tracks</span>-->
+                <!--                </button>-->
+                <!--                <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist} title="clear de-selected tracks">-->
+                <!--                    <ClearPlaylistIcon/>-->
+                <!--                    <span>clear</span>-->
+                <!--                </button>-->
+            </span>
         </div>
         <div class="table-container">
             <table class="table">
@@ -337,7 +507,7 @@
                             <a href={row.link} title="open track in Deezer web interface">
                                 <IconDeezer/>
                             </a>
-
+                            {row.id}
                         </Td>
                         <Td justify="start">
                             <img src={row.album.cover_small} alt="album cover"/>
@@ -356,14 +526,18 @@
                                 </a>
                                 <button class=" "
                                         title="add all artist titles to the playlist"
-                                        on:click={()=> addArtistTracks(row.artist.id)}><AddIcon/></button>
+                                        on:click={()=> addArtistTracks(row.artist.id)}>
+                                    <AddIcon/>
+                                </button>
                                 <button class=" "
-                                        title="remove all artist titles to the playlist"
-                                        on:click={()=> removeArtistTracks(row.artist.id)}><RemoveIcon/></button>
+                                        title="deselect all artist titles from the playlist"
+                                        on:click={()=> removeArtistTracks(row.artist.id)}>
+                                    <RemoveIcon/>
+                                </button>
                             </HorizontalSpan>
                         </td>
 
-                        <Td>{row.album.release_date}</Td>
+                        <Td>{row.rank}</Td>
                         <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
                             <span class="grow"></span>
                             <AudioPlayer src={row.preview} enabled={row.readable}/>
@@ -377,12 +551,12 @@
     </label>
 
 
-    <pre id="showDebug">
-            { JSON.stringify({topArtists: $playlistArtists}, null, 2)}
-        {#if debug}
-                { JSON.stringify({playlist: data.playlist}, null, 2)}
-            {/if}
-        </pre>
+    <!--    <pre id="showDebug">-->
+    <!--            { JSON.stringify({topArtists: $playlistArtists}, null, 2)}-->
+    <!--        {#if debug}-->
+    <!--                { JSON.stringify({playlist: data.playlist}, null, 2)}-->
+    <!--            {/if}-->
+    <!--        </pre>-->
 </PlaylistApplicationShell>
 
 <style>

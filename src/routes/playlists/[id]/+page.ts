@@ -4,14 +4,31 @@ import {getDeezerArtist, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
 import {callDeezer} from "$lib/DeezerCall";
 import {getRemainingPages} from "$lib/PaginationUtils";
 import type {PaginatedResult} from "$lib/PaginationUtils";
-import {error} from "@sveltejs/kit";
+import {error, redirect} from "@sveltejs/kit";
 import type {PageLoadEvent} from "./$types";
 
 
 export const ssr = false
 
-export async function load({parent, params, url}: PageLoadEvent) {
-    const playlistId = params.id;
+async function getPlaylistId(playlistId: string): Promise<string> {
+    if (playlistId === 'NEW') {
+        const timestamp = new Date().toISOString();
+        const newPlaylist = await callDeezer<DeezerPlaylistDetails>({
+            apiPath: `/user/me/playlists`,
+            searchParams: {
+                request_method: "POST",
+                title: `New Playlist ${timestamp}`,
+                description: `Playlist created with deezer-artist-playlist-organizer on the ${timestamp}`,
+                public: true
+            }
+        });
+        throw redirect(302, "./" + newPlaylist.id)
+    }
+    return playlistId;
+}
+
+export async function load({params}: PageLoadEvent) {
+    const playlistId = await getPlaylistId(params.id);
 
     const playlist = await callDeezer<DeezerPlaylistDetails>({
         apiPath: `/playlist/${playlistId}`,
@@ -26,7 +43,7 @@ export async function load({parent, params, url}: PageLoadEvent) {
         }, {} as { [k: number]: { artist: DeezerArtist, count: number } });
 
     const playlistTopArtists = Object.values(artistsById)
-       // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
+        // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
         .sort((a, b) => b.count - a.count)
 
     const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
