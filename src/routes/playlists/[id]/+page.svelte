@@ -59,7 +59,7 @@
                 return mainCompare
             }
 
-            const deezerArtists = [...playlistArtists].sort((a1, a2) => {
+            const deezerArtists = playlistArtists.sort((a1, a2) => {
                 switch (playlistArtistsSort.orderBy) {
                     case "trackCount":
                         return direction * compare(compareTrackCount, compareName)(a1, a2)
@@ -178,8 +178,8 @@
     let artistSearch = writable("")
 
     function onArtistSelection(event: CustomEvent<AutocompleteOption>) {
-        const artist = event.detail.meta
-        addArtistTracks(artist)
+        const artistId = event.detail.value
+        addArtistTracks(artistId)
     }
 
 
@@ -192,7 +192,13 @@
             apiPath: `/search/artist`,
             searchParams: {q: $artistSearch}
         }).then(searchResult => {
-            const options = searchResult.data.map(artist => ({label: `<img src="${artist.picture_small}" class="mx-2"/> ${artist.name}`, value: artist.id, meta: artist}));
+            const options = searchResult.data.map(artist => ({
+                label: `<span class="flex justify-between w-full items-center">
+<span class="flex items-center"> <img src="${artist.picture_small}" class="mx-2"/>${artist.name}</span>
+ <button class="btn-icon btn-icon-sm variant-outline-tertiary" title="add all artist titles to the playlist">add</button></span>`,
+                value: artist.id,
+                meta: artist
+            }));
             set(options)
         });
     })
@@ -206,9 +212,21 @@
 
 <PlaylistApplicationShell>
     <svelte:fragment slot="sidebarLeft">
-           <span class="flex flex-row justify-between w-full items-center space-x-2">
-                     <HorizontalSpan><h4>Playlists Artists
-             </h4></HorizontalSpan>
+
+        <span class=" my-4">
+            <span class="mb-2">
+                <HorizontalSpan><h4>Search Artist </h4></HorizontalSpan>
+            </span>
+
+            <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
+            <div class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
+                <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
+            </div>
+
+        </span>
+
+        <span class="flex justify-between w-full items-center space-x-2 my-4">
+            <HorizontalSpan><h4>Playlists Artists             </h4></HorizontalSpan>
             <HorizontalSpan>
                 {#if playlistArtistsSort.orderBy === "trackCount"}
                     <button on:click={()=> sortArtists({orderBy:"alphabetical"})}>
@@ -244,10 +262,10 @@
                             </a>
                         </HorizontalSpan>
                         <HorizontalSpan>
-                            <button class="btn-icon btn-icon-sm "
+                            <button class=""
                                     title="add all artist titles to the playlist"
                                     on:click={()=> addArtistTracks(topArtist.id)}><AddIcon/></button>
-                            <button class="btn-icon btn-icon-sm "
+                            <button class=""
                                     class:text-gray-500={trackCount===0}
                                     title="remove all artist titles to the playlist"
                                     on:click={()=> removeArtistTracks(topArtist.id)}><RemoveIcon/></button>
@@ -257,10 +275,6 @@
             {/each}
         </ul>
 
-        <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
-        <div class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
-            <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
-        </div>
 
     </svelte:fragment>
     <svelte:fragment slot="sidebarRight">
@@ -333,12 +347,20 @@
                                 <IconDeezer/>
                             </a>
                         </Td>
-                        <td> <span class="flex items-center">
+                        <td>
+
+                            <HorizontalSpan>
                                 <span class="m-2"> {row.artist.name}</span>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
                                     <IconDeezer/>
                                 </a>
-                                </span>
+                                <button class=" "
+                                        title="add all artist titles to the playlist"
+                                        on:click={()=> addArtistTracks(row.artist.id)}><AddIcon/></button>
+                                <button class=" "
+                                        title="remove all artist titles to the playlist"
+                                        on:click={()=> removeArtistTracks(row.artist.id)}><RemoveIcon/></button>
+                            </HorizontalSpan>
                         </td>
 
                         <Td>{row.album.release_date}</Td>
