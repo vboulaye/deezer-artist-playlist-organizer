@@ -31,7 +31,7 @@
         {#each data.playlists.data as row, i}
             <tr>
                 <td>
-                    <a href="playlists/{row.id}">
+                    <a href="playlists/{row.id}" data-sveltekit-preload-data="off">
                         <div class="flex items-center">
                             <img src={row.picture_small} alt="playlist cover" aria-describedby="{row.id}_title"/>
                             <strong id="{row.id}_title" class="m-2">{row.title}</strong>

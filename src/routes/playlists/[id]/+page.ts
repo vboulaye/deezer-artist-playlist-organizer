@@ -1,3 +1,4 @@
+import {page} from "$app/stores";
 import type {DeezerAlbum, DeezerArtist, DeezerPlaylistDetails} from "$lib/DeezerApiModel";
 import {getDeezerArtist, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
 import {callDeezer} from "$lib/DeezerCall";
@@ -9,18 +10,11 @@ import type {PageLoadEvent} from "./$types";
 
 export const ssr = false
 
-export async function load({parent, params}: PageLoadEvent) {
-    const {session} = await parent();
-    const accessToken = session?.token?.access_token;
-    if (!accessToken) {
-        throw error(500, "no access token in session")
-    }
-
+export async function load({parent, params, url}: PageLoadEvent) {
     const playlistId = params.id;
 
     const playlist = await callDeezer<DeezerPlaylistDetails>({
         apiPath: `/playlist/${playlistId}`,
-        accessToken: accessToken
     });
     const artistsById = playlist.tracks.data
         .reduce((accumulator, track) => {
@@ -36,7 +30,7 @@ export async function load({parent, params}: PageLoadEvent) {
         .sort((a, b) => b.count - a.count)
 
     const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
-        const artist = await getDeezerArtist(topArtist.artist.id, accessToken);
+        const artist = await getDeezerArtist(topArtist.artist.id);
         // const albums = await getDeezerArtistDiscography(topArtist.artist.id, accessToken);
         return artist// {artist, albums, count: topArtist.count}
     }));

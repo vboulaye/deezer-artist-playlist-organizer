@@ -35,15 +35,13 @@ export function appendIndexToPaginationResults<T>(result: PaginatedResult<T>, st
 
 export async function getRemainingPages<T>(req: {
     apiPath: string,
-    accessToken?: string,
     index: number,
     limit: number,
 }): Promise<PaginatedResult<T>> {
-    console.log("getRemainingPages", req.index)
+    // console.log("getRemainingPages", req.index)
 
     const nextPage = await callDeezer<PaginatedResult<T>>({
         apiPath: req.apiPath,
-        accessToken: req.accessToken,
         searchParams: {
             limit: req.limit,
             index: req.index,

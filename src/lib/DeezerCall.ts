@@ -1,16 +1,17 @@
 import {browser} from "$app/environment";
+import {env} from "$env/dynamic/public";
+import {TokenCookie} from "$lib/CookieManager";
 import {ROOT_LOGGER} from "$lib/Debug";
 import {error} from "@sveltejs/kit";
 import fetchJsonp from "fetch-jsonp";
 
 const LOGGER = ROOT_LOGGER.extend('call-deezer')
-export const API_URL = "https://api.deezer.com"
 
 async function fetchDeezer(url: URL) {
     if (browser) {
         url.searchParams.set("output", "jsonp")
         LOGGER({fetchJsonp: url.toString()})
-        console.log(url.toString())
+        console.log("fetchDeezer: " + url.toString())
         const response = await fetchJsonp(url.toString(), {
             timeout: 10000,
         })
@@ -30,15 +31,16 @@ export interface DeezerSearchParams {
 
 export async function callDeezer<T>(req: {
     apiPath: string,
-    accessToken?: string,
     searchParams?: DeezerSearchParams
 }): Promise<T> {
-    if (!req.accessToken) {
-        throw error(500, "no access_token in session")
-    }
     LOGGER(`calling ${req.apiPath}`)
-    const url = new URL(req.apiPath, API_URL);
-    url.searchParams.set("access_token", req.accessToken)
+    const url = new URL(req.apiPath, env.PUBLIC_DEEZER_API_URL);
+    TokenCookie.get()
+    const accessToken = TokenCookie.get()
+    if (!accessToken) {
+        throw error(500, "no accessToken in cookies")
+    }
+    url.searchParams.set("access_token", accessToken)
     if (req.searchParams) {
         Object.entries(req.searchParams)
             .forEach(([key, value]) => {

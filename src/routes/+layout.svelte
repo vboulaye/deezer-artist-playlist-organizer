@@ -10,7 +10,7 @@
     import {AppShell, AppBar, Toast} from "@skeletonlabs/skeleton";
     import LoginStatus from "./LoginStatus.svelte";
 
-    let showSession = false
+    export let data
 </script>
 
 <AppShell>
@@ -22,27 +22,22 @@
                 <ul class="navItems">
                     <li class="navItem"><a href="/">Home</a></li>
                     <li class="navItem"><a href="/playlists">Playlists</a></li>
-                    <li class="navItem"><a href="#showSession" on:click={()=>showSession=!showSession}>{showSession ? 'hide session' : 'show session'}</a></li>
                 </ul>
             </nav>
 
             <svelte:fragment slot="trail">
-                <LoginStatus/>
+                <LoginStatus currentUser={data.currentUser}/>
             </svelte:fragment>
         </AppBar>
     </svelte:fragment>
-<!--    <svelte:fragment slot="sidebarLeft">Sidebar Left</svelte:fragment>-->
+    <!--    <svelte:fragment slot="sidebarLeft">Sidebar Left</svelte:fragment>-->
 
-<!--    <svelte:fragment slot="sidebarRight">Sidebar Right</svelte:fragment>-->
+    <!--    <svelte:fragment slot="sidebarRight">Sidebar Right</svelte:fragment>-->
     <!-- (pageHeader) -->
     <!-- Router Slot -->
     <slot/>
 
-    {#if showSession}
-        <pre id="showSession">
-            { JSON.stringify($page.data.session, null, 2)}
-        </pre>
-    {/if}
+
     <!-- ---- / ---- -->
     <!-- (pageFooter) -->
     <!-- (footer) -->

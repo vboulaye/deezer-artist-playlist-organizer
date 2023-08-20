@@ -22,19 +22,19 @@ export function caching<K, V>(request: { cacheName: string, getter: (k: K) => V,
 }
 
 export class DeezerCache<K, V> {
-    private readonly cacheName: string;
-    private readonly ttl?: number;
 
-    constructor(cacheName: string, ttl?: number) {
-        this.cacheName = cacheName;
-        this.ttl = ttl;
+    constructor(private cacheName: string, private ttl?: number) {
     }
 
     get(cacheKey: K): V | undefined {
-        return cache.get({cacheName: this.cacheName, cacheKey})
+        return cache.get(this.buildKey(cacheKey))
+    }
+
+    private buildKey(cacheKey: K) {
+        return this.cacheName + "~" + cacheKey;
     }
 
     put(cacheKey: K, value: V) {
-        cache.put({cacheName: this.cacheName, cacheKey}, value, this.ttl)
+        cache.put(this.buildKey(cacheKey), value, this.ttl)
     }
 }

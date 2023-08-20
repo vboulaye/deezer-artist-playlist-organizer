@@ -1,3 +1,4 @@
+
 export interface DeezerPlaylist {
     id: number
     title: string
@@ -35,8 +36,9 @@ export interface DeezerArtist {
     link: string
     tracklist: string
     type: "artist"
-    picture_small:string
+    picture_small: string
 }
+
 export interface DeezerAlbum {
     id: number
     title: string
@@ -47,11 +49,11 @@ export interface DeezerAlbum {
     cover_xl: string
     md5_image: string
     tracklist: string
-    release_date:string
+    release_date: string
     type: "album"
 }
 
-export interface DeezerTrack{
+export interface DeezerTrack {
     id: number
     readable: boolean
     title: string

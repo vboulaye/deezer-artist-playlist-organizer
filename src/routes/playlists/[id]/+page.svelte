@@ -44,7 +44,6 @@
         try {
             const updateResult = await callDeezer({
                 apiPath: `/playlist/${data.playlist.id}`,
-                accessToken: data.session.token?.access_token,
                 searchParams: searchParams
             });
             toastStore.trigger({
@@ -62,13 +61,12 @@
     let debug = false
 
     async function addArtistTracks(artistId: number) {
-        const albums = await getDeezerArtistDiscography(artistId, data.session.token?.access_token);
+        const albums = await getDeezerArtistDiscography(artistId);
 
         trackSelections.update(trackSelectionsList => {
             const allTracks = albums
                 .sort((a1, a2) => a1.release_date.localeCompare(a2.release_date))
                 .flatMap(album => {
-                    console.log(album.title)
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const {tracks: _, ...parentAlbum} = album
                     return album.tracks.map(track => ({...track, album: parentAlbum}));
@@ -127,7 +125,6 @@
         }
         callDeezer<PaginatedResult<DeezerArtist>>({
             apiPath: `/search/artist`,
-            accessToken: data.session.token?.access_token,
             searchParams: {q: $artistSearch}
         }).then(searchResult => {
             const options = searchResult.data.map(artist => ({label: `<img src="${artist.picture_small}" class="mx-2"/> ${artist.name}`, value: artist.id, meta: artist}));

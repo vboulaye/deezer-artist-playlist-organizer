@@ -9,7 +9,6 @@ const deezerArtistDiscographyCache = new DeezerCache<number, DeezerAlbumWithTrac
 export async function getDeezerArtist(artistId: number, accessToken?: string): Promise<DeezerArtist> {
     const fromCache = deezerArtistCache.get(artistId);
     if (fromCache) {
-        console.log("from cache", {fromCache})
         return fromCache
     }
     const artist = await callDeezer<DeezerArtist>({

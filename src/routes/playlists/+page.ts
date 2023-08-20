@@ -6,14 +6,9 @@ import {appendIndexToPaginationResults, extractPaginationIndex, getRemainingPage
 import {error} from "@sveltejs/kit";
 import type {PageLoadEvent} from "./$types";
 
-
 export const ssr = false
 
-export async function load({parent, url}: PageLoadEvent) {
-    const {session} = await parent();
-    if (!session?.token?.access_token) {
-        throw error(500, "no access token in session")
-    }
+export async function load({url}: PageLoadEvent) {
 
     const startIndex = extractPaginationIndex(url);
     const search = url.searchParams.get("search");
@@ -22,14 +17,13 @@ export async function load({parent, url}: PageLoadEvent) {
         return {
             playlists: callDeezer<PaginatedResult<DeezerPlaylist>>({
                 apiPath: `/search/playlist`,
-                accessToken: session.token.access_token,
                 searchParams: {
                     q: search,
                     limit: 1000,
                     index: startIndex || 0,
                 }
             })
-                .then(result => appendIndexToPaginationResults(result, startIndex))
+                .then(result => appendIndexToPaginationResults(result, startIndex||0))
         }
     }
 
@@ -37,7 +31,6 @@ export async function load({parent, url}: PageLoadEvent) {
         return {
             playlists: callDeezer<PaginatedResult<DeezerPlaylist>>({
                 apiPath: `/user/me/playlists`,
-                accessToken: session.token.access_token,
                 searchParams: {
                     limit: 1000,
                     index: startIndex,
@@ -51,7 +44,6 @@ export async function load({parent, url}: PageLoadEvent) {
     return {
         playlists: traceDuration("getRemainingPages:", async () => await getRemainingPages<PaginatedResult<DeezerPlaylist>>({
             apiPath: `/user/me/playlists`,
-            accessToken: session?.token?.access_token||"",
             limit: 500,
             index: 0,
         }))
