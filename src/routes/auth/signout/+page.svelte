@@ -1,5 +1,6 @@
 <script lang="ts">
 
+    import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
     import {RedirectCookie, TokenCookie, UserCookie} from "$lib/CookieManager";
 
@@ -8,7 +9,9 @@
     TokenCookie.remove()
     RedirectCookie.remove()
 
-    goto("/", {invalidateAll: true})
+    if (browser) {
+        goto("/", {invalidateAll: true})
+    }
 
 </script>
 

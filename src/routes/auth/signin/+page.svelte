@@ -1,5 +1,6 @@
 <script lang="ts">
 
+    import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
     import {page} from "$app/stores";
     import {env} from "$env/dynamic/public";
@@ -23,16 +24,19 @@
     ].join(',')
     const authorizationUrl = `${deezerAuthorizationUrl}?app_id=${deezerApplicationId}&redirect_uri=${redirectUrl}&perms=${permissions}&output=json&response_type=token`
 
-    const referrer = document.referrer;
-    if (referrer) {
-        const referrerUrl = new URL(referrer);
-        if (referrerUrl.host === $page.url.host) {
-            console.log("set redriect to " + referrerUrl.pathname)
-            RedirectCookie.set(referrerUrl.pathname)
+    if (browser) {
+        const referrer = document.referrer;
+        if (referrer) {
+            const referrerUrl = new URL(referrer);
+            if (referrerUrl.host === $page.url.host) {
+                console.log("set redriect to " + referrerUrl.pathname)
+                RedirectCookie.set(referrerUrl.pathname)
+            }
         }
+
+        document.location.href = authorizationUrl
     }
 
-    document.location.href = authorizationUrl
 
 </script>
 
