@@ -2,6 +2,7 @@
 
     import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
+    import {base} from "$app/paths";
     import {RedirectCookie, TokenCookie, UserCookie} from "$lib/CookieManager";
 
 
@@ -10,7 +11,7 @@
     RedirectCookie.remove()
 
     if (browser) {
-        goto("/", {invalidateAll: true})
+        goto(base+"/", {invalidateAll: true})
     }
 
 </script>

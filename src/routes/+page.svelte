@@ -1,10 +1,11 @@
 <script lang="ts">
 
     import {goto} from "$app/navigation";
+    import {base} from "$app/paths";
     import {page} from "$app/stores";
 
     if ($page.data.currentUser) {
-        goto("/playlists")
+        goto(base+"/playlists")
     }
 
 </script>

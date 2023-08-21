@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { base } from '$app/paths'
     // This contains the bulk of Skeletons required styles:
     import '@skeletonlabs/skeleton/styles/skeleton.css';
 
@@ -27,17 +28,17 @@
 
         <AppBar gridColumns="grid-cols-3" slotLead="place-content-start" slotTrail="place-content-end">
             <svelte:fragment slot="lead">
-                <a href="/">
+                <a href="{base}/">
                     <IconLogo/>
                 </a>
             </svelte:fragment>
             <nav>
                 <ul class="navItems">
                     {#if $page.data.currentUser}
-                        <li class="navItem"><a href="/playlists">Your Playlists</a></li>
-                        <li class="navItem"><a href="/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>
+                        <li class="navItem"><a href="{base}/playlists">Your Playlists</a></li>
+                        <li class="navItem"><a href="{base}/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>
                     {:else }
-                        <li class="navItem"><a href="/">Home</a></li>
+                        <li class="navItem"><a href="{base}/">Home</a></li>
                     {/if}
                 </ul>
             </nav>

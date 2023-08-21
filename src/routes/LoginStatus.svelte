@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {base} from "$app/paths";
     import {page} from "$app/stores";
 </script>
 
@@ -14,10 +15,10 @@
                     <strong>{$page.data.currentUser?.name}</strong>
                 </div>
           </span>
-            <a href="/auth/signout" class="" data-sveltekit-preload-data="off">Sign out</a>
+            <a href="{base}/auth/signout" class="" data-sveltekit-preload-data="off">Sign out</a>
         {:else}
             <span class="notSignedInText">You are not signed in</span>
-            <a href="/auth/signin" class="" data-sveltekit-preload-data="off">Sign in</a>
+            <a href="{base}/auth/signin" class="" data-sveltekit-preload-data="off">Sign in</a>
         {/if}
     </span>
 </span>

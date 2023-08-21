@@ -19,6 +19,18 @@ const config = {
             // assets: '/icon-socle-web2',
             base: dev ? undefined : "/deezer-artist-playlist-organizer",
         },
+        prerender: {
+            handleHttpError: ({ path, referrer, message }) => {
+                // ignore deliberate link to shiny 404 page
+                if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+                    return;
+                }
+
+                console.error({path, referrer, message})
+                // otherwise fail the build
+                throw new Error(message);
+            }
+        }
     }
 };
 

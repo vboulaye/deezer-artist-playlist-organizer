@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {base} from "$app/paths";
     import {extractPaginationIndex} from "$lib/PaginationUtils";
     import type {PageData} from "./$types";
     import humanizeDuration from "humanize-duration";
