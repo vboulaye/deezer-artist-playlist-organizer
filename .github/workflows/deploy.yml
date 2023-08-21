@@ -44,6 +44,7 @@ jobs:
       - name: Install dependencies and build application
         env:
           PUBLIC_DEEZER_ID: ${{ secrets.PUBLIC_DEEZER_ID }}
+          PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN }}
         run: |
           pnpm install
           npm run build
