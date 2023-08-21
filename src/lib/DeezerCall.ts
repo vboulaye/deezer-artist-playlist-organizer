@@ -1,7 +1,7 @@
 import {browser} from "$app/environment";
-import {env} from "$env/dynamic/public";
 import {TokenCookie} from "$lib/CookieManager";
 import {ROOT_LOGGER} from "$lib/Debug";
+import {DeezerConfig} from "$lib/DeezerConfig";
 import {error} from "@sveltejs/kit";
 import fetchJsonp from "fetch-jsonp";
 
@@ -34,7 +34,7 @@ export async function callDeezer<T>(req: {
     searchParams?: DeezerSearchParams
 }): Promise<T> {
     LOGGER(`calling ${req.apiPath}`)
-    const url = new URL(req.apiPath, env.PUBLIC_DEEZER_API_URL);
+    const url = new URL(req.apiPath, DeezerConfig.API_URL);
     TokenCookie.get()
     const accessToken = TokenCookie.get()
     if (!accessToken) {
