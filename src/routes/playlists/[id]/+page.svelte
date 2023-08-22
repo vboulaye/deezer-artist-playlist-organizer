@@ -26,7 +26,7 @@
     import type {PageData} from "./$types";
 
 
-    import { Paginator } from '@skeletonlabs/skeleton';
+    import {Paginator} from '@skeletonlabs/skeleton';
 
 
     export let data: PageData
@@ -135,8 +135,23 @@
         return groupedArray;
     }
 
+    interface UpdateTracksProgress {
+        message: string
+        value: number
+        max: number
+    }
+
+    let updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
+
+    updateTracksProgress.subscribe(w=>console.log(w))
+
     async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
-        for (const w of window(trackIds, 100)) {
+        updateTracksProgress.set({message: `sending 0/${trackIds.length} ${requestMethod} ${param} `, value: 0, max: trackIds.length})
+        let count = 0
+        const windowSize = 100;
+        for (const w of window(trackIds, windowSize)) {
+            count += windowSize
+            updateTracksProgress.set({message: `sending ${count} / ${trackIds.length} ${requestMethod} ${param} `, value:count, max: trackIds.length})
             console.log(`sending ${requestMethod} ${param}=${JSON.stringify(w)}`)
             const searchParams: DeezerSearchParams = {
                 request_method: requestMethod,
@@ -175,8 +190,9 @@
                 message: `Updated playlist tracks`,
                 timeout: 3000
             });
+            updateTracksProgress.set(undefined)
 
-            await new Promise((next) => setTimeout(next, 3000))
+            await new Promise((next) => setTimeout(next, 1000))
             toastStore.trigger({
                 message: `refresh`,
                 timeout: 3000
@@ -188,6 +204,8 @@
                 message: `Updated playlist tracks: error ${e}`,
                 timeout: 3000
             });
+        } finally {
+            updateTracksProgress.set(undefined)
         }
     }
 
@@ -405,7 +423,7 @@
         offset: 0,
         limit: 20,
         size: 10,
-        amounts: [10,20,50,100],
+        amounts: [10, 20, 50, 100],
     };
 
     $: {
@@ -498,6 +516,10 @@
                 <IconSave/>
                 <span>Update Tracks</span>
             </button>
+            {#if $updateTracksProgress}
+                <span>{$updateTracksProgress.message}</span>
+                <progress value={$updateTracksProgress.value} max={$updateTracksProgress.max}/>
+            {/if}
 
             <h3>Prepare playlist</h3>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks}
@@ -580,8 +602,8 @@
                             <a href="https://www.deezer.com/album/{row.album.id}"
                                title="open album in Deezer web interface">
                                 <HorizontalSpan>
-                                <img src={row.album.cover_small} alt="album cover"/>
-                                <span>{row.album.title}</span>
+                                    <img src={row.album.cover_small} alt="album cover"/>
+                                    <span>{row.album.title}</span>
                                 </HorizontalSpan>
                             </a>
                         </Td>
