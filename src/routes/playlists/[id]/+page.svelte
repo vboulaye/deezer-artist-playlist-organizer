@@ -25,6 +25,10 @@
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
 
+
+    import { Paginator } from '@skeletonlabs/skeleton';
+
+
     export let data: PageData
 
     const playlistArtists = writable<DeezerArtist[]>([])
@@ -397,6 +401,21 @@
         return $trackSelections.filter(t => t.track.artist.id === artistId && t.selected).length
     }
 
+    let tracksPage = {
+        offset: 0,
+        limit: 20,
+        size: 10,
+        amounts: [10,20,50,100],
+    };
+
+    $: {
+        tracksPage.size = $trackSelections.length
+    }
+
+    $: paginatedSource = $trackSelections.slice(
+        tracksPage.offset * tracksPage.limit,             // start
+        tracksPage.offset * tracksPage.limit + tracksPage.limit // end
+    );
 </script>
 
 
@@ -545,7 +564,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {#each $trackSelections as trackSelection, i}
+                {#each paginatedSource as trackSelection, i}
                     {@const row=trackSelection.track}
                     <tr class={computeRowClass(trackSelection)}
                         class:!text-red-500={!row.readable}
@@ -592,8 +611,14 @@
                         </Td>
                     </tr>
                 {/each}
+
                 </tbody>
             </table>
+            <Paginator
+                    bind:settings={tracksPage}
+                    showFirstLastButtons="{true}"
+                    showPreviousNextButtons="{true}"
+            />
         </div>
 
     </label>
