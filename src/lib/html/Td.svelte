@@ -3,7 +3,7 @@
 </script>
 
 <td style="vertical-align:middle">
-    <div class="flex items-center justify-{justify} space-x-2 h-full">
+    <div class="flex items-center justify-{justify} gap-x-2 h-full">
         <slot/>
     </div>
 </td>

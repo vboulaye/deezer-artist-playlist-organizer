@@ -452,7 +452,7 @@
 
         </span>
 
-        <span class="flex justify-between w-full items-center space-x-2 my-4">
+        <span class="flex justify-between w-full items-center gap-x-2 my-4">
             <HorizontalSpan><h4>Playlists Artists</h4></HorizontalSpan>
             <HorizontalSpan>
                 {#if playlistArtistsSort.orderBy === "trackCount"}
@@ -479,7 +479,7 @@
             {#each $playlistArtists as topArtist}
                 {@const trackCount=getTrackCount(topArtist.id)}
                 <li>
-                    <span class="flex flex-row justify-between w-full items-center space-x-2">
+                    <span class="flex flex-row justify-between w-full items-center gap-x-2">
                         <HorizontalSpan>
                             <img src={topArtist.picture_small} alt="{topArtist.name}"/>
                             <span>{topArtist.name}</span>
@@ -558,7 +558,7 @@
     </form>
 
     <label class="label">
-        <div class="flex justify-between w-full items-center space-x-2 my-4">
+        <div class="flex justify-between w-full items-center gap-x-2 my-4">
 
             <span>Tracks ({data.playlist.tracks.data.length})</span>
             <span>
@@ -607,7 +607,7 @@
                                 </HorizontalSpan>
                             </a>
                         </Td>
-                        <td>
+                        <Td>
 
                             <HorizontalSpan>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
@@ -624,7 +624,7 @@
                                     <RemoveIcon/>
                                 </button>
                             </HorizontalSpan>
-                        </td>
+                        </Td>
 
                         <Td>{row.rank}</Td>
                         <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
