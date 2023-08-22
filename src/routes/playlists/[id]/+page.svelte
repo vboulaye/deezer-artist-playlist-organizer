@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {invalidateAll} from "$app/navigation";
     import AudioPlayer from "$lib/AudioPlayer.svelte";
     import type {DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
     import {getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
@@ -26,7 +27,25 @@
 
     export let data: PageData
 
-    const playlistArtists = writable(data.topArtists)
+    const playlistArtists = writable<DeezerArtist[]>([])
+
+    $: {
+        playlistArtists.set(data.topArtists)
+    }
+
+
+    interface TrackSelection {
+        track: DeezerTrack
+        inPlaylist: boolean
+        selected: boolean
+    }
+
+    const trackSelections = writable<TrackSelection[]>([])
+    $: {
+        const newTrackSelections = data.playlist.tracks.data
+            .map(track => ({track, inPlaylist: true, selected: true}));
+        trackSelections.set(newTrackSelections)
+    }
 
     interface PlaylistArtistsSort {
         ascending: boolean
@@ -73,14 +92,6 @@
         })
     }
 
-    interface TrackSelection {
-        track: DeezerTrack
-        inPlaylist: boolean
-        selected: boolean
-    }
-
-    const trackSelections: Writable<TrackSelection[]> = writable(data.playlist.tracks.data.map(track => ({track, inPlaylist: true, selected: true})))
-
     async function savePlaylist() {
         const searchParams: DeezerSearchParams = {
             request_method: "POST",
@@ -112,25 +123,62 @@
         }
     }
 
-    async function saveTracks() {
-        const trackIds = $trackSelections
-            .filter(trackSelection => trackSelection.selected)
-            .map(trackSelection => trackSelection.track.id)
-            .join(",");
+    function window<T>(arr: T[], size: number) {
+        const groupedArray = [];
+        for (let i = 0; i < arr.length; i += size) {
+            groupedArray.push(arr.slice(i, i + size));
+        }
+        return groupedArray;
+    }
 
-        try {
+    async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
+        for (const w of window(trackIds, 100)) {
+            console.log(`sending ${requestMethod} ${param}=${JSON.stringify(w)}`)
+            const searchParams: DeezerSearchParams = {
+                request_method: requestMethod,
+            };
+            searchParams[param] = w.join(',')
             const updateResult = await callDeezer({
                 apiPath: `/playlist/${data.playlist.id}/tracks`,
-                searchParams: {
-                    request_method: "POST",
-                    songs: trackIds,
-                    order: trackIds,
-                }
+                searchParams: searchParams
             });
+            console.log({updateResult})
+            if (!updateResult) {
+                throw new Error(`unable to send ${requestMethod} ${param}=${JSON.stringify(w)}`)
+            }
+        }
+    }
+
+    async function saveTracks() {
+
+        try {
+            const selectedTrackIds = $trackSelections
+                .filter(trackSelection => trackSelection.selected && !trackSelection.inPlaylist)
+                .map(trackSelection => trackSelection.track.id)
+            await updateTracks(selectedTrackIds, "POST", "songs")
+
+            const deletedTrackIds = $trackSelections
+                .filter(trackSelection => !trackSelection.selected && trackSelection.inPlaylist)
+                .map(trackSelection => trackSelection.track.id)
+            await updateTracks(deletedTrackIds, "DELETE", "songs")
+
+            const orderedTrackIds = $trackSelections
+                .filter(trackSelection => trackSelection.selected)
+                .map(trackSelection => trackSelection.track.id)
+            await updateTracks(orderedTrackIds, "POST", "order")
+
             toastStore.trigger({
-                message: `Updated playlist tracks order : ${updateResult ? "OK" : "KO"}`,
+                message: `Updated playlist tracks`,
                 timeout: 3000
             });
+
+            await new Promise((next) => setTimeout(next, 3000))
+            toastStore.trigger({
+                message: `refresh`,
+                timeout: 3000
+            });
+            await invalidateAll()
+
         } catch (e) {
             toastStore.trigger({
                 message: `Updated playlist tracks: error ${e}`,
@@ -433,11 +481,13 @@
             </button>
 
             <h3>Prepare playlist</h3>
-            <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks} title="trye to find equivalent of tracks that are not readable anymore">
+            <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks}
+                    title="trye to find equivalent of tracks that are not readable anymore">
                 <RelinkTracksIcon/>
                 <span>retrieve non readable tracks</span>
             </button>
-            <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist} title="clear de-selected tracks">
+            <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist}
+                    title="clear de-selected tracks">
                 <ClearPlaylistIcon/>
                 <span>clear de-selected tracks</span>
             </button>
@@ -503,26 +553,24 @@
                         <Td><input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/></Td>
                         <Td><span>{i + 1}</span></Td>
                         <Td justify="start">
-                            <span>{row.title}</span>
                             <a href={row.link} title="open track in Deezer web interface">
-                                <IconDeezer/>
+                                <span>{row.title}</span>
                             </a>
-                            {row.id}
                         </Td>
                         <Td justify="start">
-                            <img src={row.album.cover_small} alt="album cover"/>
-                            <span class="m-2">{row.album.title}</span>
                             <a href="https://www.deezer.com/album/{row.album.id}"
                                title="open album in Deezer web interface">
-                                <IconDeezer/>
+                                <HorizontalSpan>
+                                <img src={row.album.cover_small} alt="album cover"/>
+                                <span>{row.album.title}</span>
+                                </HorizontalSpan>
                             </a>
                         </Td>
                         <td>
 
                             <HorizontalSpan>
-                                <span class="m-2"> {row.artist.name}</span>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
-                                    <IconDeezer/>
+                                    <span> {row.artist.name}</span>
                                 </a>
                                 <button class=" "
                                         title="add all artist titles to the playlist"
