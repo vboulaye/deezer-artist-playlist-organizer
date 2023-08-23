@@ -143,7 +143,7 @@
 
     let updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
 
-    updateTracksProgress.subscribe(w=>console.log(w))
+    updateTracksProgress.subscribe(w => console.log(w))
 
     async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
         updateTracksProgress.set({message: `sending 0/${trackIds.length} ${requestMethod} ${param} `, value: 0, max: trackIds.length})
@@ -151,7 +151,7 @@
         const windowSize = 100;
         for (const w of window(trackIds, windowSize)) {
             count += windowSize
-            updateTracksProgress.set({message: `sending ${count} / ${trackIds.length} ${requestMethod} ${param} `, value:count, max: trackIds.length})
+            updateTracksProgress.set({message: `sending ${count} / ${trackIds.length} ${requestMethod} ${param} `, value: count, max: trackIds.length})
             console.log(`sending ${requestMethod} ${param}=${JSON.stringify(w)}`)
             const searchParams: DeezerSearchParams = {
                 request_method: requestMethod,
@@ -446,12 +446,13 @@
             </span>
 
             <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
-            <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto" tabindex="-1">
+            <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto inline-block" tabindex="-1">
                 <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>
             </span>
 
         </span>
 
+        {#if $playlistArtists?.length > 0}
         <span class="flex justify-between w-full items-center gap-x-2 my-4">
             <HorizontalSpan><h4>Playlists Artists</h4></HorizontalSpan>
             <HorizontalSpan>
@@ -475,10 +476,10 @@
                 {/if}
             </HorizontalSpan>
            </span>
-        <ul class="list">
-            {#each $playlistArtists as topArtist}
-                {@const trackCount=getTrackCount(topArtist.id)}
-                <li>
+            <ul class="list">
+                {#each $playlistArtists as topArtist}
+                    {@const trackCount=getTrackCount(topArtist.id)}
+                    <li>
                     <span class="flex flex-row justify-between w-full items-center gap-x-2">
                         <HorizontalSpan>
                             <img src={topArtist.picture_small} alt="{topArtist.name}"/>
@@ -498,10 +499,10 @@
                                     on:click={()=> removeArtistTracks(topArtist.id)}><RemoveIcon/></button>
                         </HorizontalSpan>
                     </span>
-                </li>
-            {/each}
-        </ul>
-
+                    </li>
+                {/each}
+            </ul>
+        {/if}
 
     </svelte:fragment>
     <svelte:fragment slot="sidebarRight">
@@ -560,7 +561,7 @@
     <label class="label">
         <div class="flex justify-between w-full items-center gap-x-2 my-4">
 
-            <span>Tracks ({data.playlist.tracks.data.length})</span>
+            <span>{$trackSelections?.filter(x=>x.selected).length} Tracks ({data.playlist.tracks.data.length} in playlist)</span>
             <span>
 <!--                <button class="btn variant-filled-secondary">-->
                 <!--                    <IconSave/>-->
@@ -572,11 +573,18 @@
                 <!--                </button>-->
             </span>
         </div>
-        <div class="table-container">
-            <table class="table">
+        <span class="table-container">
+            <table class="table  my-4">
                 <thead>
                 <tr class="center">
-                    <th><input type="checkbox" class="checkbox"/></th>
+                    <th>
+                         <input type="checkbox" />
+<!--                        <input type="checkbox" class="checkbox"-->
+<!--                               checked={paginatedSource.filter(x=>x.selected).length===paginatedSource.length && paginatedSource.length>0}-->
+<!--                               indeterminate={paginatedSource.filter(x=>x.selected).length!==paginatedSource.length && paginatedSource.filter(x=>x.selected).length>0}-->
+<!--                               on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target.checked); trackSelections.update(x=>x)}}-->
+<!--                        />-->
+                    </th>
                     <th>Pos.</th>
                     <th class="w-1/3">Title</th>
                     <th>Album</th>
@@ -591,7 +599,9 @@
                     <tr class={computeRowClass(trackSelection)}
                         class:!text-red-500={!row.readable}
                     >
-                        <Td><input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/></Td>
+                        <Td>
+                            <input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/>
+                        </Td>
                         <Td><span>{i + 1}</span></Td>
                         <Td justify="start">
                             <a href={row.link} title="open track in Deezer web interface">
@@ -641,30 +651,16 @@
                     showFirstLastButtons="{true}"
                     showPreviousNextButtons="{true}"
             />
-        </div>
+        </span>
 
     </label>
-
-
-    <!--    <pre id="showDebug">-->
-    <!--            { JSON.stringify({topArtists: $playlistArtists}, null, 2)}-->
-    <!--        {#if debug}-->
-    <!--                { JSON.stringify({playlist: data.playlist}, null, 2)}-->
-    <!--            {/if}-->
-    <!--        </pre>-->
 </PlaylistApplicationShell>
 
 <style>
-    tr.center > td, tr.center > th {
-        text-align: left;
-        vertical-align: middle;
-    }
 
     :global(.h-100vh) {
         height: 100vh
     }
 
-    :global(.w-100vw) {
-        width: 100vw
-    }
+
 </style>

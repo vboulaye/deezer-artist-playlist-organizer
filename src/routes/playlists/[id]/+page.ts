@@ -1,5 +1,5 @@
 import {page} from "$app/stores";
-import type {DeezerAlbum, DeezerArtist, DeezerPlaylistDetails} from "$lib/DeezerApiModel";
+import type {DeezerAlbum, DeezerArtist, DeezerPlaylistDetails, DeezerTrack} from "$lib/DeezerApiModel";
 import {getDeezerArtist, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
 import {callDeezer} from "$lib/DeezerCall";
 import {getRemainingPages} from "$lib/PaginationUtils";
@@ -46,7 +46,15 @@ export async function load({params}: PageLoadEvent) {
         // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
         .sort((a, b) => b.count - a.count)
 
+
+    if (playlist.nb_tracks > 400) {
+        const lastTracks = await getRemainingPages<DeezerTrack>({apiPath: `/playlist/${playlistId}/tracks`, limit: 100, index: playlist.tracks.data.length});
+        playlist.tracks.data = [...playlist.tracks.data, ...lastTracks.data]
+    }
+
     const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
+
+        //just to get the pictures!
         const artist = await getDeezerArtist(topArtist.artist.id);
         // const albums = await getDeezerArtistDiscography(topArtist.artist.id, accessToken);
         return artist// {artist, albums, count: topArtist.count}
