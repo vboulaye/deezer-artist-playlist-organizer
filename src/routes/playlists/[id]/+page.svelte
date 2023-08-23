@@ -182,7 +182,7 @@
             await updateTracks(deletedTrackIds, "DELETE", "songs")
 
             const orderedTrackIds = $trackSelections
-                .filter(trackSelection => trackSelection.selected)
+                .filter(trackSelection => trackSelection.selected )
                 .map(trackSelection => trackSelection.track.id)
             await updateTracks(orderedTrackIds, "POST", "order")
 
@@ -291,15 +291,21 @@
     }
 
     async function relinkNonReadableTracks() {
-        const trackSelectionsList = get(trackSelections);
+        const trackSelectionsList: TrackSelection[] = get(trackSelections);
         const readableBefore = trackSelectionsList.filter(x => x.track.readable).length;
-        for (const trackSelection of trackSelectionsList) {
+        const unreadable = trackSelectionsList.filter(x => !x.track.readable);
+        for (const trackSelection of unreadable) {
             const unreadableTrack = trackSelection.track;
-            if (!unreadableTrack.readable) {
-                const alternativeTrack = await getAlternativeTrack(unreadableTrack);
-                if (alternativeTrack) {
-                    trackSelection.track = alternativeTrack
-                }
+            const alternativeTrack = await getAlternativeTrack(unreadableTrack);
+            if (alternativeTrack) {
+                // trackSelection.track = alternativeTrack
+                trackSelection.selected = false
+                const insertionPoint = trackSelectionsList.indexOf(trackSelection);
+                trackSelectionsList.splice(insertionPoint + 1, 0, {
+                    selected: true,
+                    inPlaylist: false,
+                    track: alternativeTrack
+                });
             }
         }
         const readableAfter = trackSelectionsList.filter(x => x.track.readable).length;
@@ -351,7 +357,7 @@
                 });
 
             allTracks.forEach(track => {
-                const existingTrack = data.playlist.tracks.data.find(playlistTrack => playlistTrack.id === track.id);
+                const existingTrack = trackSelectionsList.find(playlistTrack => playlistTrack.track.id === track.id);
                 if (!existingTrack) {
                     trackSelectionsList.push({
                         track,
@@ -359,7 +365,8 @@
                         selected: true,
                     })
                 } else {
-                    existingTrack.album = track.album
+                    // update the existing track with the detailled album info
+                    existingTrack.track.album = track.album
                 }
             })
 
@@ -558,35 +565,34 @@
         </div>
     </form>
 
-    <label class="label">
-        <div class="flex justify-between w-full items-center gap-x-2 my-4">
+    <div class="flex justify-between w-full items-center gap-x-2 my-4">
 
-            <span>{$trackSelections?.filter(x=>x.selected).length} Tracks ({data.playlist.tracks.data.length} in playlist)</span>
-            <span>
+        <span>{$trackSelections?.filter(x => x.selected).length} Tracks ({data.playlist.tracks.data.length}
+            in playlist)</span>
+        <span>
 <!--                <button class="btn variant-filled-secondary">-->
-                <!--                    <IconSave/>-->
-                <!--                    <span>Update Tracks</span>-->
-                <!--                </button>-->
-                <!--                <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist} title="clear de-selected tracks">-->
-                <!--                    <ClearPlaylistIcon/>-->
-                <!--                    <span>clear</span>-->
-                <!--                </button>-->
+            <!--                    <IconSave/>-->
+            <!--                    <span>Update Tracks</span>-->
+            <!--                </button>-->
+            <!--                <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist} title="clear de-selected tracks">-->
+            <!--                    <ClearPlaylistIcon/>-->
+            <!--                    <span>clear</span>-->
+            <!--                </button>-->
             </span>
-        </div>
-        <span class="table-container">
+    </div>
+    <span class="table-container">
             <table class="table  my-4">
                 <thead>
-                <tr class="center">
+                <tr class="">
                     <th>
-                         <input type="checkbox" />
-<!--                        <input type="checkbox" class="checkbox"-->
-<!--                               checked={paginatedSource.filter(x=>x.selected).length===paginatedSource.length && paginatedSource.length>0}-->
-<!--                               indeterminate={paginatedSource.filter(x=>x.selected).length!==paginatedSource.length && paginatedSource.filter(x=>x.selected).length>0}-->
-<!--                               on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target.checked); trackSelections.update(x=>x)}}-->
-<!--                        />-->
+                        <input type="checkbox" class="checkbox"
+                               checked={paginatedSource.filter(x=>x.selected).length===paginatedSource.length && paginatedSource.length>0}
+                               indeterminate={paginatedSource.filter(x=>x.selected).length!==paginatedSource.length && paginatedSource.filter(x=>x.selected).length>0}
+                               on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target.checked); trackSelections.update(x=>x)}}
+                        />
                     </th>
                     <th>Pos.</th>
-                    <th class="w-1/3">Title</th>
+                    <th class=".fitwidth">Title</th>
                     <th>Album</th>
                     <th>Artist</th>
                     <th>rank</th>
@@ -604,6 +610,7 @@
                         </Td>
                         <Td><span>{i + 1}</span></Td>
                         <Td justify="start">
+                            <AudioPlayer src={row.preview} enabled={row.readable}/>
                             <a href={row.link} title="open track in Deezer web interface">
                                 <span>{row.title}</span>
                             </a>
@@ -639,7 +646,7 @@
                         <Td>{row.rank}</Td>
                         <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
                             <span class="grow"></span>
-                            <AudioPlayer src={row.preview} enabled={row.readable}/>
+
                         </Td>
                     </tr>
                 {/each}
@@ -653,7 +660,6 @@
             />
         </span>
 
-    </label>
 </PlaylistApplicationShell>
 
 <style>
@@ -662,5 +668,9 @@
         height: 100vh
     }
 
+    .fitwidth {
+        width: 1px;
+        white-space: nowrap;
+    }
 
 </style>
