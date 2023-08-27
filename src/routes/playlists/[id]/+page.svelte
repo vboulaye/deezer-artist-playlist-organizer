@@ -492,23 +492,26 @@
                     {@const trackCount=getTrackCount(topArtist.id)}
                     <li>
                     <span class="flex flex-row justify-between w-full items-center gap-x-2">
-                        <HorizontalSpan>
-                            <img src={topArtist.picture_small} alt="{topArtist.name}"/>
-                            <span>{topArtist.name}</span>
-                            <small title="artist has {trackCount} tracks in the playlist ">(#{trackCount})</small>
-                            <a href={topArtist.link} title="open artist in Deezer web interface">
-                                <IconDeezer/>
-                            </a>
-                        </HorizontalSpan>
-                        <HorizontalSpan>
-                            <button class=""
+                        <a href={topArtist.link} title="open artist in Deezer web interface">
+                              <HorizontalSpan>
+                                <img src={topArtist.picture_small} alt="{topArtist.name}"/>
+                                <span> {topArtist.name}</span>
+                                   <small title="artist has {trackCount} tracks in the playlist ">(#{trackCount})</small>
+                              </HorizontalSpan>
+                        </a>
+                        <div class="btn-group-vertical btn btn-sm gap-y-2">
+                            <button class="!p-0 "
                                     title="add all artist titles to the playlist"
-                                    on:click={()=> addArtistTracks(topArtist.id)}><AddIcon/></button>
-                            <button class=""
-                                    class:text-gray-500={trackCount===0}
+                                    on:click={()=> addArtistTracks(topArtist.id)}>
+                                <AddIcon/>
+                            </button>
+                            <button class="!p-0"
                                     title="deselect all artist titles from the playlist"
-                                    on:click={()=> removeArtistTracks(topArtist.id)}><RemoveIcon/></button>
-                        </HorizontalSpan>
+                                    class:text-gray-500={trackCount===0}
+                                    on:click={()=> removeArtistTracks(topArtist.id)}>
+                                <RemoveIcon/>
+                            </button>
+                        </div>
                     </span>
                     </li>
                 {/each}
@@ -631,23 +634,25 @@
                                 </HorizontalSpan>
                             </a>
                         </Td>
-                        <Td>
+                        <Td justify="start">
 
-                            <HorizontalSpan>
+                            <span class="flex flex-row justify-between w-full items-center gap-x-2">
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
                                     <span> {row.artist.name}</span>
                                 </a>
-                                <button class=" "
-                                        title="add all artist titles to the playlist"
-                                        on:click={()=> addArtistTracks(row.artist.id)}>
-                                    <AddIcon/>
-                                </button>
-                                <button class=" "
-                                        title="deselect all artist titles from the playlist"
-                                        on:click={()=> removeArtistTracks(row.artist.id)}>
-                                    <RemoveIcon/>
-                                </button>
-                            </HorizontalSpan>
+                                <div class="btn-group-vertical btn btn-sm gap-y-2">
+                                    <button class="!p-0 "
+                                                 title="add all artist titles to the playlist"
+                                                 on:click={()=> addArtistTracks(row.artist.id)}>
+                                        <AddIcon/>
+                                    </button>
+                                    <button class="!p-0"
+                                                     title="deselect all artist titles from the playlist"
+                                                     on:click={()=> removeArtistTracks(row.artist.id)}>
+                                        <RemoveIcon/>
+                                    </button>
+                                </div>
+                            </span>
                         </Td>
 
                         <Td>{row.rank}</Td>
