@@ -25,6 +25,17 @@ export interface DeezerAlbumWithTracks extends DeezerAlbum {
     })[]
 }
 
+export async function getAlbumTracks(albumId: number) {
+    const tracks = await getRemainingPages<DeezerTrack & {
+        isrc: string
+    }>({
+        apiPath: "/album/" + albumId + "/tracks",
+        index: 0,
+        limit: 100,
+    })
+    return tracks;
+}
+
 export async function getDeezerArtistDiscography(artistId: number): Promise<DeezerAlbumWithTracks[]> {
     const fromCache = deezerArtistDiscographyCache.get(artistId);
     if (fromCache) {
@@ -38,13 +49,7 @@ export async function getDeezerArtistDiscography(artistId: number): Promise<Deez
     })
 
     const albums = await Promise.all(allArtistAlbums.data.map(async album => {
-        const tracks = await getRemainingPages<DeezerTrack & {
-            isrc:string
-        }>({
-            apiPath: "/album/" + album.id + "/tracks",
-            index: 0,
-            limit: 100,
-        })
+        const tracks = await getAlbumTracks(album.id);
         return {
             ...album,
             tracks: tracks.data

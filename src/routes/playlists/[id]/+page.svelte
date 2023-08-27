@@ -27,6 +27,8 @@
 
 
     import {Paginator} from '@skeletonlabs/skeleton';
+    import {removeArtistTracks, addArtistTracks, removeAlbumTracks, addAlbumTracks} from "./trackSelection";
+    import type {TrackSelection} from "./trackSelection";
 
 
     export let data: PageData
@@ -38,11 +40,7 @@
     }
 
 
-    interface TrackSelection {
-        track: DeezerTrack
-        inPlaylist: boolean
-        selected: boolean
-    }
+
 
     const trackSelections = writable<TrackSelection[]>([])
     $: {
@@ -251,7 +249,7 @@
                 const tracksByIsrc = Object.values(matchingTracksByTitle.reduce((acc, track) => {
                     acc[track.isrc] = track;
                     return acc
-                }, {} as any));
+                }, {} as {[k:string]:DeezerTrack}));
                 if (tracksByIsrc.length === 1) {
                     return tracksByIsrc[0]
                 }
@@ -272,7 +270,7 @@
                         const tracksByIsrc = Object.values(matchingTracksByTitleAndAlbum.reduce((acc, track) => {
                             acc[track.isrc] = track;
                             return acc
-                        }, {} as any));
+                        }, {} as {[k:string]:DeezerTrack}));
                         if (tracksByIsrc.length === 1) {
                             return tracksByIsrc[0]
                         }
@@ -336,58 +334,6 @@
 
     let debug = false
 
-    function removeArtistTracks(artistId: number) {
-        trackSelections.update(trackSelectionsList => {
-            trackSelectionsList
-                .forEach(trackSelection => {
-                    if (trackSelection.track.artist.id === artistId) {
-                        trackSelection.selected = false
-                    }
-                })
-            return trackSelectionsList
-        })
-    }
-
-    async function addArtistTracks(artistId: number) {
-        const albums = await getDeezerArtistDiscography(artistId);
-
-        trackSelections.update(trackSelectionsList => {
-            const allTracks = albums
-                .sort((a1, a2) => a1.release_date.localeCompare(a2.release_date))
-                .flatMap(album => {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const {tracks: _, ...parentAlbum} = album
-                    return album.tracks.map(track => ({...track, album: parentAlbum}));
-                });
-
-            allTracks.forEach(track => {
-                const existingTrack = trackSelectionsList.find(playlistTrack => playlistTrack.track.id === track.id);
-                if (!existingTrack) {
-                    trackSelectionsList.push({
-                        track,
-                        inPlaylist: false,
-                        selected: true,
-                    })
-                } else {
-                    // update the existing track with the detailled album info
-                    existingTrack.track.album = track.album
-                }
-            })
-
-            function getIndex(t: TrackSelection): number {
-                return allTracks.findIndex(x => x.id === t.track.id)
-            }
-
-            trackSelectionsList.sort((t1, t2) => {
-                const pos1 = getIndex(t1)
-                const pos2 = getIndex(t2)
-                return pos1 - pos2
-            })
-
-            return trackSelectionsList
-        })
-    }
-
 
     function computeRowClass(trackSelection: TrackSelection): string {
         if (!trackSelection.inPlaylist && trackSelection.selected) {
@@ -403,7 +349,7 @@
 
     function onArtistSelection(event: CustomEvent<AutocompleteOption>) {
         const artistId = event.detail.value as number
-        addArtistTracks(artistId)
+        addArtistTracks(artistId, trackSelections)
     }
 
     const artistsFound = derived<Writable<string>, AutocompleteOption[]>(artistSearch, ($artistSearch, set) => {
@@ -499,16 +445,16 @@
                                    <small title="artist has {trackCount} tracks in the playlist ">(#{trackCount})</small>
                               </HorizontalSpan>
                         </a>
-                        <div class="btn-group-vertical btn btn-sm gap-y-2">
+                        <div class="btn-group-vertical btn btn-sm gap-y-1">
                             <button class="!p-0 "
                                     title="add all artist titles to the playlist"
-                                    on:click={()=> addArtistTracks(topArtist.id)}>
+                                    on:click={()=> addArtistTracks(topArtist.id, trackSelections)}>
                                 <AddIcon/>
                             </button>
                             <button class="!p-0"
                                     title="deselect all artist titles from the playlist"
                                     class:text-gray-500={trackCount===0}
-                                    on:click={()=> removeArtistTracks(topArtist.id)}>
+                                    on:click={()=> removeArtistTracks(topArtist.id, trackSelections)}>
                                 <RemoveIcon/>
                             </button>
                         </div>
@@ -626,13 +572,27 @@
                             </a>
                         </Td>
                         <Td justify="start">
-                            <a href="https://www.deezer.com/album/{row.album.id}"
-                               title="open album in Deezer web interface">
-                                <HorizontalSpan>
-                                    <img src={row.album.cover_small} alt="album cover"/>
-                                    <span>{row.album.title}</span>
-                                </HorizontalSpan>
-                            </a>
+                           <span class="flex flex-row justify-between w-full items-center gap-x-2">
+                               <a href="https://www.deezer.com/album/{row.album.id}"
+                                   title="open album in Deezer web interface">
+                                    <HorizontalSpan>
+                                        <img src={row.album.cover_small} alt="album cover"/>
+                                        <span>{row.album.title}</span>
+                                    </HorizontalSpan>
+                               </a>
+                               <div class="btn-group-vertical btn btn-sm gap-y-1">
+                                    <button class="!p-0 "
+                                            title="add all album titles to the playlist"
+                                            on:click={()=> addAlbumTracks(row.album, trackSelections)}>
+                                        <AddIcon/>
+                                    </button>
+                                    <button class="!p-0"
+                                            title="deselect all album titles from the playlist"
+                                            on:click={()=> removeAlbumTracks(row.album.id, trackSelections)}>
+                                        <RemoveIcon/>
+                                    </button>
+                                </div>
+                            </span>
                         </Td>
                         <Td justify="start">
 
@@ -640,15 +600,15 @@
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
                                     <span> {row.artist.name}</span>
                                 </a>
-                                <div class="btn-group-vertical btn btn-sm gap-y-2">
+                                <div class="btn-group-vertical btn btn-sm gap-y-1">
                                     <button class="!p-0 "
                                                  title="add all artist titles to the playlist"
-                                                 on:click={()=> addArtistTracks(row.artist.id)}>
+                                                 on:click={()=> addArtistTracks(row.artist.id, trackSelections)}>
                                         <AddIcon/>
                                     </button>
                                     <button class="!p-0"
                                                      title="deselect all artist titles from the playlist"
-                                                     on:click={()=> removeArtistTracks(row.artist.id)}>
+                                                     on:click={()=> removeArtistTracks(row.artist.id, trackSelections)}>
                                         <RemoveIcon/>
                                     </button>
                                 </div>
