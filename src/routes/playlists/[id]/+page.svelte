@@ -146,6 +146,9 @@
     updateTracksProgress.subscribe(w => console.log(w))
 
     async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
+        if (!trackIds.length) {
+            return
+        }
         updateTracksProgress.set({message: `sending 0/${trackIds.length} ${requestMethod} ${param} `, value: 0, max: trackIds.length})
         let count = 0
         const windowSize = 100;
@@ -171,34 +174,32 @@
     async function saveTracks() {
 
         try {
-            const selectedTrackIds = $trackSelections
+            const addedTrackIds = $trackSelections
                 .filter(trackSelection => trackSelection.selected && !trackSelection.inPlaylist)
                 .map(trackSelection => trackSelection.track.id)
-            await updateTracks(selectedTrackIds, "POST", "songs")
+            await updateTracks(addedTrackIds, "POST", "songs")
 
             const deletedTrackIds = $trackSelections
                 .filter(trackSelection => !trackSelection.selected && trackSelection.inPlaylist)
                 .map(trackSelection => trackSelection.track.id)
             await updateTracks(deletedTrackIds, "DELETE", "songs")
 
-            const orderedTrackIds = $trackSelections
-                .filter(trackSelection => trackSelection.selected )
-                .map(trackSelection => trackSelection.track.id)
-            await updateTracks(orderedTrackIds, "POST", "order")
+            if (addedTrackIds.length > 0) {
+                const orderedTrackIds = $trackSelections
+                    .filter(trackSelection => trackSelection.selected)
+                    .map(trackSelection => trackSelection.track.id)
+                await updateTracks(orderedTrackIds, "POST", "order")
+            }
 
-            toastStore.trigger({
-                message: `Updated playlist tracks`,
-                timeout: 3000
-            });
             updateTracksProgress.set(undefined)
 
-            await new Promise((next) => setTimeout(next, 1000))
-            toastStore.trigger({
-                message: `refresh`,
-                timeout: 3000
-            });
-            await invalidateAll()
-
+            if (addedTrackIds.length || deletedTrackIds.length) {
+                const refreshToastId = toastStore.trigger({
+                    message: `Updated playlist tracks, refreshing playlist data`,
+                });
+                await invalidateAll()
+                toastStore.close(refreshToastId)
+            }
         } catch (e) {
             toastStore.trigger({
                 message: `Updated playlist tracks: error ${e}`,
@@ -531,14 +532,17 @@
 
             <h3>Prepare playlist</h3>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks}
+                    disabled={$trackSelections.filter(x=>!x.track.readable).length===0}
                     title="trye to find equivalent of tracks that are not readable anymore">
                 <RelinkTracksIcon/>
                 <span>retrieve non readable tracks</span>
             </button>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist}
-                    title="clear de-selected tracks">
+                    disabled={$trackSelections.filter(x=>!x.selected).length===0}
+                    title="remove de-selected tracks"
+                    >
                 <ClearPlaylistIcon/>
-                <span>clear de-selected tracks</span>
+                <span>remove de-selected tracks</span>
             </button>
 
             <!--        <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>-->
