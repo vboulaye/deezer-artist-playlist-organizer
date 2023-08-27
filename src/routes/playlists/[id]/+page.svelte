@@ -143,7 +143,7 @@
 
     let updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
 
-    updateTracksProgress.subscribe(w => console.log(w))
+    // updateTracksProgress.subscribe(w => console.log(w))
 
     async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
         if (!trackIds.length) {
@@ -227,7 +227,8 @@
                 const {tracks: _, ...parentAlbum} = album
                 return album.tracks
                     .map(track => ({...track, album: parentAlbum}));
-            });
+            })
+            .filter(x => x.id !== unreadableTrack.id && x.readable);
 
         const comparisonOptions = {sensitivity: "base", ignorePunctuation: true, numeric: false, usage: "search"} as Intl.CollatorOptions;
 
@@ -293,13 +294,14 @@
 
     async function relinkNonReadableTracks() {
         const trackSelectionsList: TrackSelection[] = get(trackSelections);
-        const readableBefore = trackSelectionsList.filter(x => x.track.readable).length;
-        const unreadable = trackSelectionsList.filter(x => !x.track.readable);
-        for (const trackSelection of unreadable) {
+        const readableBefore = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
+        const unreadableTracks = trackSelectionsList.filter(x => x.selected && !x.track.readable);
+        for (const trackSelection of unreadableTracks) {
             const unreadableTrack = trackSelection.track;
             const alternativeTrack = await getAlternativeTrack(unreadableTrack);
             if (alternativeTrack) {
                 // trackSelection.track = alternativeTrack
+                console.log("adding alternative to " + trackSelection.track.id + " : " + alternativeTrack.title)
                 trackSelection.selected = false
                 const insertionPoint = trackSelectionsList.indexOf(trackSelection);
                 trackSelectionsList.splice(insertionPoint + 1, 0, {
@@ -309,9 +311,10 @@
                 });
             }
         }
-        const readableAfter = trackSelectionsList.filter(x => x.track.readable).length;
+        const readableAfter = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
         toastStore.trigger({
-            message: `Reattached ${readableAfter - readableBefore} track(s) to readable equivalents.<br/>(${trackSelectionsList.length - readableAfter} unreadable track remaining)`,
+
+            message: `Reattached ${readableAfter - readableBefore} track(s) to readable equivalents.<br/>(${trackSelectionsList.filter(x => x.selected).length - readableAfter} unreadable track remaining)`,
             timeout: 10000
         });
         trackSelections.set(trackSelectionsList)
@@ -321,7 +324,7 @@
     function purgePlaylist() {
         trackSelections.update(trackSelectionsList => {
             const clearedSelections = trackSelectionsList
-                .filter(trackSelection => trackSelection.selected);
+                .filter(trackSelection => trackSelection.selected || trackSelection.inPlaylist);
             toastStore.trigger({
                 message: `Removed ${trackSelectionsList.length - clearedSelections.length} track(s) from the playlist`,
                 timeout: 3000
@@ -532,15 +535,15 @@
 
             <h3>Prepare playlist</h3>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks}
-                    disabled={$trackSelections.filter(x=>!x.track.readable).length===0}
+                    disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}
                     title="trye to find equivalent of tracks that are not readable anymore">
                 <RelinkTracksIcon/>
                 <span>retrieve non readable tracks</span>
             </button>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist}
-                    disabled={$trackSelections.filter(x=>!x.selected).length===0}
-                    title="remove de-selected tracks"
-                    >
+                    disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}
+                    title="remove de-selected new tracks"
+            >
                 <ClearPlaylistIcon/>
                 <span>remove de-selected tracks</span>
             </button>
