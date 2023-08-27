@@ -29,6 +29,7 @@
     import {Paginator} from '@skeletonlabs/skeleton';
     import {removeArtistTracks, addArtistTracks, removeAlbumTracks, addAlbumTracks} from "./trackSelection";
     import type {TrackSelection} from "./trackSelection";
+    import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
 
 
     export let data: PageData
@@ -572,7 +573,11 @@
                             </a>
                         </Td>
                         <Td justify="start">
-                           <span class="flex flex-row justify-between w-full items-center gap-x-2">
+                            <TrackSelectionComponent
+                                    addTitle="add all album titles to the playlist"
+                                    removeTitle="deselect all album titles from the playlist"
+                                        on:add={()=> addAlbumTracks(row.album, trackSelections)}
+                                        on:remove={()=> removeAlbumTracks(row.album.id, trackSelections)}>
                                <a href="https://www.deezer.com/album/{row.album.id}"
                                    title="open album in Deezer web interface">
                                     <HorizontalSpan>
@@ -580,39 +585,19 @@
                                         <span>{row.album.title}</span>
                                     </HorizontalSpan>
                                </a>
-                               <div class="btn-group-vertical btn btn-sm gap-y-1">
-                                    <button class="!p-0 "
-                                            title="add all album titles to the playlist"
-                                            on:click={()=> addAlbumTracks(row.album, trackSelections)}>
-                                        <AddIcon/>
-                                    </button>
-                                    <button class="!p-0"
-                                            title="deselect all album titles from the playlist"
-                                            on:click={()=> removeAlbumTracks(row.album.id, trackSelections)}>
-                                        <RemoveIcon/>
-                                    </button>
-                                </div>
-                            </span>
+                            </TrackSelectionComponent>
                         </Td>
                         <Td justify="start">
-
-                            <span class="flex flex-row justify-between w-full items-center gap-x-2">
+                           <TrackSelectionComponent
+                                   addTitle="add all artist titles to the playlist"
+                                   removeTitle="deselect all artist titles from the playlist"
+                                   on:add={()=> addArtistTracks(row.artist.id, trackSelections)}
+                                   on:remove={()=> removeArtistTracks(row.artist.id, trackSelections)}>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
                                     <span> {row.artist.name}</span>
                                 </a>
-                                <div class="btn-group-vertical btn btn-sm gap-y-1">
-                                    <button class="!p-0 "
-                                                 title="add all artist titles to the playlist"
-                                                 on:click={()=> addArtistTracks(row.artist.id, trackSelections)}>
-                                        <AddIcon/>
-                                    </button>
-                                    <button class="!p-0"
-                                                     title="deselect all artist titles from the playlist"
-                                                     on:click={()=> removeArtistTracks(row.artist.id, trackSelections)}>
-                                        <RemoveIcon/>
-                                    </button>
-                                </div>
-                            </span>
+                            </TrackSelectionComponent>
+
                         </Td>
 
                         <Td>{row.rank}</Td>
