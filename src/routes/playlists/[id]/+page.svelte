@@ -10,7 +10,7 @@
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {Autocomplete, getToastStore, Paginator} from '@skeletonlabs/skeleton';
+    import {Autocomplete, getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
@@ -20,6 +20,9 @@
     import RelinkTracksIcon from '~icons/ph/link-bold';
     import RemoveIcon from '~icons/ph/minus-circle-bold';
     import AddIcon from '~icons/ph/plus-circle-bold';
+    import IconStarEmpty from '~icons/ph/star-bold';
+    import IconStarHalf from '~icons/ph/star-duotone';
+    import IconStarFull from '~icons/ph/star-fill';
     import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
     import SortDescendingIcon from '~icons/ph/sort-descending-bold';
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
@@ -388,6 +391,8 @@
         tracksPage.page * tracksPage.limit,             // start
         tracksPage.page * tracksPage.limit + tracksPage.limit // end
     );
+
+    $: maxRank= $trackSelections.reduce((pre, cur)=>Math.max(pre,cur.track.rank),0)
 </script>
 
 
@@ -614,7 +619,13 @@
 
                         </Td>
 
-                        <Td>{row.rank}</Td>
+                        <Td title={row.rank}>
+                            <Ratings value={5*row.rank/maxRank} max={5} >
+                                <svelte:fragment slot="empty"><IconStarEmpty/></svelte:fragment>
+                                <svelte:fragment slot="half"><IconStarHalf/></svelte:fragment>
+                                <svelte:fragment slot="full"><IconStarFull/></svelte:fragment>
+                            </Ratings>
+                        </Td>
                         <Td>{humanizeDuration(row.duration * 1000, {units: ["m", "s"], largest: 2,})}
                             <span class="grow"></span>
 
