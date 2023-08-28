@@ -1,3 +1,6 @@
+<!--
+copied from  https://github.com/skeletonlabs/skeleton/blob/dev/packages/skeleton/src/lib/components/Autocomplete/Autocomplete.svelte
+-->
 <script lang="ts" context="module">
     import type {Transition} from "@skeletonlabs/skeleton";
     import { slide } from 'svelte/transition';
