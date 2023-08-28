@@ -1,6 +1,7 @@
 <script lang="ts">
     import {base} from "$app/paths";
     import {extractPaginationIndex} from "$lib/PaginationUtils";
+    import {Paginator} from "@skeletonlabs/skeleton";
     import type {PageData} from "./$types";
     import humanizeDuration from "humanize-duration";
     import PlaylistApplicationShell from "./PlaylistApplicationShell.svelte";
@@ -9,14 +10,27 @@
 
     let debug = false
 
-    function extractIndexFromPaginationUrl(paginationUrl: string): string {
-        const index = extractPaginationIndex(new URL(paginationUrl)) ||0;
-        return `?index=${index}`
+    let tracksPage = {
+        page: 0,
+        limit: 5,
+        size: 10,
+        amounts: [5, 10, 20, 50, 100],
+    };
+
+    $: allPlaylists = data.playlists.data
+
+    $: {
+        tracksPage.size = allPlaylists.length
     }
+
+    $: paginatedSource = allPlaylists.slice(
+        tracksPage.page * tracksPage.limit,             // start
+        tracksPage.page * tracksPage.limit + tracksPage.limit // end
+    );
 
 </script>
 
-<PlaylistApplicationShell >
+<PlaylistApplicationShell>
     <svelte:fragment slot="sidebarLeft">
     </svelte:fragment>
     <svelte:fragment slot="sidebarRight">
@@ -34,39 +48,29 @@
             </tr>
             </thead>
             <tbody>
-            {#each data.playlists.data as row, i}
+            {#each paginatedSource as playlist}
                 <tr>
                     <td>
-                        <a href="playlists/{row.id}" data-sveltekit-preload-data="off">
+                        <a href="playlists/{playlist.id}" data-sveltekit-preload-data="off">
                             <div class="flex items-center">
-                                <img src={row.picture_small} alt="playlist cover" aria-describedby="{row.id}_title" class="deezer_img_small"/>
-                                <strong id="{row.id}_title" class="m-2">{row.title}</strong>
+                                <img src={playlist.picture_small} alt="playlist cover" aria-describedby="{playlist.id}_title" class="deezer_img_small"/>
+                                <strong id="{playlist.id}_title" class="m-2">{playlist.title}</strong>
                             </div>
                         </a>
                     </td>
-                    <td class="items-center">{row.creation_date}</td>
-                    <td><input class="checkbox" type="checkbox" checked={row.public} disabled/></td>
-                    <td>{row.nb_tracks}</td>
-                    <td>{humanizeDuration(row.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
+                    <td class="items-center">{playlist.creation_date}</td>
+                    <td><input class="checkbox" type="checkbox" checked={playlist.public} disabled/></td>
+                    <td>{playlist.nb_tracks}</td>
+                    <td>{humanizeDuration(playlist.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
                 </tr>
             {/each}
             </tbody>
-            <tfoot>
-            <tr>
-                <td>
-                    {#if data.playlists.prev}
-                        <a href="{extractIndexFromPaginationUrl(data.playlists.prev)}">previous</a>
-                    {/if}
-                </td>
-                <td colspan="3">playlists {data.playlists.startIndex} - {data.playlists.endIndex} (total:{data.playlists.total})</td>
-                <td>
-                    {#if data.playlists.next}
-                        <a href="{extractIndexFromPaginationUrl(data.playlists.next)}">next</a>
-                    {/if}
-                </td>
-            </tr>
-            </tfoot>
         </table>
+        <Paginator
+                bind:settings={tracksPage}
+                showFirstLastButtons="{true}"
+                showPreviousNextButtons="{true}"
+        />
     </div>
 
     <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>

@@ -1,14 +1,8 @@
 <script lang="ts">
     import { base } from '$app/paths'
-    // This contains the bulk of Skeletons required styles:
-    import '@skeletonlabs/skeleton/styles/skeleton.css';
-
-    // Your selected Skeleton theme:
-    import '@skeletonlabs/skeleton/themes/theme-gold-nouveau.css';
     // Finally, your application's global stylesheet (sometimes labeled 'app.css')
     import '../app.postcss';
-    import {beforeNavigate} from "$app/navigation";
-    import {navigating, page} from "$app/stores";
+    import { page} from "$app/stores";
 
     import {AppBar, AppShell, Toast} from "@skeletonlabs/skeleton";
     import IconLogo from '~icons/ph/playlist-bold'
@@ -16,12 +10,16 @@
 
     import LoginStatus from "./LoginStatus.svelte";
     import PageTransition from "./PageTransition.svelte";
+    import { initializeStores } from '@skeletonlabs/skeleton';
+
+    initializeStores();
 
     export let data
 
 </script>
 
 <LoadingVeil/>
+<Toast/>
 
 <AppShell>
     <svelte:fragment slot="header">
@@ -62,7 +60,6 @@
     <!-- (pageFooter) -->
     <!-- (footer) -->
 </AppShell>
-<Toast/>
 
 <style>
 

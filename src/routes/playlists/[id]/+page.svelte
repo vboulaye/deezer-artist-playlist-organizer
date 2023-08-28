@@ -9,28 +9,25 @@
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {Autocomplete, toastStore} from '@skeletonlabs/skeleton';
+    import {Autocomplete, getToastStore, Paginator} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
     import {derived, get, writable} from "svelte/store";
-    import IconDeezer from '~icons/jam/deezer-circle'
+    import ClearPlaylistIcon from '~icons/ph/backspace-bold';
     import IconSave from '~icons/ph/cloud-check-bold'
+    import RelinkTracksIcon from '~icons/ph/link-bold';
     import RemoveIcon from '~icons/ph/minus-circle-bold';
     import AddIcon from '~icons/ph/plus-circle-bold';
     import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
     import SortDescendingIcon from '~icons/ph/sort-descending-bold';
-    import ClearPlaylistIcon from '~icons/ph/backspace-bold';
-    import RelinkTracksIcon from '~icons/ph/link-bold';
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
-
-
-    import {Paginator} from '@skeletonlabs/skeleton';
-    import {removeArtistTracks, addArtistTracks, removeAlbumTracks, addAlbumTracks} from "./trackSelection";
     import type {TrackSelection} from "./trackSelection";
+    import {addAlbumTracks, addArtistTracks, removeAlbumTracks, removeArtistTracks} from "./trackSelection";
     import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
 
+    const toastStore = getToastStore();
 
     export let data: PageData
 
@@ -378,8 +375,8 @@
     }
 
     let tracksPage = {
-        offset: 0,
-        limit: 20,
+        page: 0,
+        limit: 10,
         size: 10,
         amounts: [10, 20, 50, 100],
     };
@@ -389,8 +386,8 @@
     }
 
     $: paginatedSource = $trackSelections.slice(
-        tracksPage.offset * tracksPage.limit,             // start
-        tracksPage.offset * tracksPage.limit + tracksPage.limit // end
+        tracksPage.page * tracksPage.limit,             // start
+        tracksPage.page * tracksPage.limit + tracksPage.limit // end
     );
 </script>
 
