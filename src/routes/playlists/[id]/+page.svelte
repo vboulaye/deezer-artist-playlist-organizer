@@ -114,16 +114,20 @@
                 apiPath: `/playlist/${data.playlist.id}`,
                 searchParams: searchParams
             });
+
             toastStore.trigger({
                 message: `Updated playlist: ${updateResult ? "OK" : "KO"}`,
                 timeout: 3000
             });
+
         } catch (e) {
             toastStore.trigger({
                 message: `Updated playlist: error ${e}`,
                 timeout: 3000
             });
         }
+
+        await saveTracks()
     }
 
     function window<T>(arr: T[], size: number) {
@@ -348,11 +352,6 @@
 
     let artistSearch = writable("")
 
-    function onArtistSelection(event: CustomEvent<AutocompleteOption>) {
-        const artistId = event.detail.value as number
-        addArtistTracks(artistId, trackSelections)
-    }
-
     const artistsFound = derived<Writable<string>, AutocompleteOption[]>(artistSearch, ($artistSearch, set) => {
         if (!$artistSearch) {
             set([])
@@ -396,6 +395,13 @@
         );
 
     $: maxRank = $trackSelections.reduce((pre, cur) => Math.max(pre, cur.track.rank), 0)
+
+    function addArtist(artist:DeezerArtist) {
+        if ($trackSelections.length===0) {
+            data.playlist.title = artist.name + " - Full Discography"
+        }
+        addArtistTracks(artist.id, trackSelections)
+    }
 </script>
 
 
@@ -409,9 +415,10 @@
 
             <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
             <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto inline-block" tabindex="-1">
-                <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}>
+                <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound}>
                     <svelte:fragment slot="optionButton" let:option={artistOption}>
-                        <ArtistSelectionComponent artist={artistOption.meta} on:click={()=>addArtistTracks(artistOption.meta.id, trackSelections)}/>
+                        <ArtistSelectionComponent artist={artistOption.meta}
+                                                  on:click={()=>addArtist(artistOption.meta)}/>
                     </svelte:fragment>
                 </DeezerAutocomplete>
             </span>
@@ -479,13 +486,9 @@
             <h3>Save to Deezer</h3>
             <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>
                 <IconSave/>
-                <span>Update playlist info</span>
+                <span>Update playlist</span>
             </button>
 
-            <button class="btn variant-filled-secondary" on:click|preventDefault={saveTracks}>
-                <IconSave/>
-                <span>Update Tracks</span>
-            </button>
             {#if $updateTracksProgress}
                 <span>{$updateTracksProgress.message}</span>
                 <progress value={$updateTracksProgress.value} max={$updateTracksProgress.max}/>
@@ -536,7 +539,7 @@
                 <tr>
                     <td colspan="3">
                         <span>{$trackSelections?.filter(x => x.selected).length} Tracks ({data.playlist.tracks.data.length}
-                        in playlist)</span>
+                            in playlist)</span>
                     </td>
                     <td colspan="4"><input bind:value={search} class="input" title="Input (search)" type="search" placeholder="Search..."/></td>
                 </tr>

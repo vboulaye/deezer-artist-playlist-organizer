@@ -24,6 +24,7 @@ export async function addArtistTracks(artistId: number, trackSelections: Writabl
     const albums = await getDeezerArtistDiscography(artistId);
 
     trackSelections.update(trackSelectionsList => {
+
         const allTracks = albums
             .sort((a1, a2) => a1.release_date.localeCompare(a2.release_date))
             .flatMap(album => {
