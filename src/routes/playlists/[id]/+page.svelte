@@ -10,7 +10,7 @@
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {Autocomplete, getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
+    import {getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
@@ -20,13 +20,14 @@
     import RelinkTracksIcon from '~icons/ph/link-bold';
     import RemoveIcon from '~icons/ph/minus-circle-bold';
     import AddIcon from '~icons/ph/plus-circle-bold';
+    import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
+    import SortDescendingIcon from '~icons/ph/sort-descending-bold';
     import IconStarEmpty from '~icons/ph/star-bold';
     import IconStarHalf from '~icons/ph/star-duotone';
     import IconStarFull from '~icons/ph/star-fill';
-    import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
-    import SortDescendingIcon from '~icons/ph/sort-descending-bold';
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
+    import ArtistSelectionComponent from "./ArtistSelectionComponent.svelte";
     import type {TrackSelection} from "./trackSelection";
     import {addAlbumTracks, addArtistTracks, removeAlbumTracks, removeArtistTracks} from "./trackSelection";
     import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
@@ -406,23 +407,9 @@
 
             <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
             <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto inline-block" tabindex="-1">
-<!--                <Autocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}/>-->
                 <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}>
-                    <svelte:fragment slot="optionButton" let:option={artistOption} let:onSelection={onSelection}>
-                        <span class="flex justify-between w-full items-center py-1">
-                            <span class="flex items-center">
-                                <img src="{artistOption.meta.picture_small}" alt="artist" class="mx-2"/>
-                                {artistOption.meta.name}
-                            </span>
-<!--                            <button class="btn-icon btn-icon-sm variant-outline-tertiary"-->
-<!--                                    title="add all artist titles to the playlist"-->
-<!--                                    on:click={()=>onSelection(artistOption)}-->
-<!--                            >add</button>-->
-                            <button class="btn"
-                                    title="add all artist titles to the playlist"
-                                    on:click={()=>addArtistTracks(artistOption.meta.id, trackSelections)}
-                            ><AddIcon/></button>
-                        </span>
+                    <svelte:fragment slot="optionButton" let:option={artistOption} >
+                        <ArtistSelectionComponent artist={artistOption.meta} on:click={()=>addArtistTracks(artistOption.meta.id, trackSelections)}/>
                     </svelte:fragment>
                 </DeezerAutocomplete>
             </span>
@@ -557,7 +544,7 @@
             </span>
     </div>
     <span class="table-container">
-            <table class="table  my-4">
+            <table class="table table-compact my-4">
                 <thead>
                 <tr class="">
                     <th>
