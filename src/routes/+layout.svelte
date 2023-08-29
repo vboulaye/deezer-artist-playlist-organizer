@@ -4,7 +4,7 @@
     import '../app.postcss';
     import { page} from "$app/stores";
 
-    import {AppBar, AppShell, Toast} from "@skeletonlabs/skeleton";
+    import {AppBar, AppShell, LightSwitch, Toast} from "@skeletonlabs/skeleton";
     import IconLogo from '~icons/ph/playlist-bold'
     import LoadingVeil from "./LoadingVeil.svelte";
 
@@ -40,9 +40,9 @@
                     {/if}
                 </ul>
             </nav>
-
             <svelte:fragment slot="trail">
                 <LoginStatus/>
+                <LightSwitch />
             </svelte:fragment>
         </AppBar>
     </svelte:fragment>

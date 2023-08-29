@@ -497,9 +497,9 @@
             <h3>Prepare playlist</h3>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks}
                     disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}
-                    title="trye to find equivalent of tracks that are not readable anymore">
+                    title="try to find an equivalent of tracks that are not readable anymore in deezer (colored in red in the table)">
                 <RelinkTracksIcon/>
-                <span>retrieve non readable tracks</span>
+                <span>fix non readable tracks</span>
             </button>
             <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist}
                     disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}
