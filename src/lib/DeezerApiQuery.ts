@@ -1,12 +1,16 @@
+import {ROOT_LOGGER} from "$lib/Debug";
 import type {DeezerAlbum, DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
 import {DeezerCache} from "$lib/DeezerCache";
 import {callDeezer} from "$lib/DeezerCall";
 import {getRemainingPages} from "$lib/PaginationUtils";
 
+const LOGGER = ROOT_LOGGER.extend('api-query')
+
 const deezerArtistCache = new DeezerCache<number, DeezerArtist>("ARTIST", 3600 * 1000)
 const deezerArtistDiscographyCache = new DeezerCache<number, DeezerAlbumWithTracks[]>("ARTIST-DISCOGRAPHY", 3600 * 1000)
 
 export async function getDeezerArtist(artistId: number): Promise<DeezerArtist> {
+    LOGGER("getDeezerArtist " + artistId)
     const fromCache = deezerArtistCache.get(artistId);
     if (fromCache) {
         return fromCache
@@ -26,6 +30,7 @@ export interface DeezerAlbumWithTracks extends DeezerAlbum {
 }
 
 export async function getAlbumTracks(albumId: number) {
+    LOGGER("getAlbumTracks " + albumId)
     const tracks = await getRemainingPages<DeezerTrack & {
         isrc: string
     }>({
@@ -37,6 +42,7 @@ export async function getAlbumTracks(albumId: number) {
 }
 
 export async function getDeezerArtistDiscography(artistId: number): Promise<DeezerAlbumWithTracks[]> {
+    LOGGER("getDeezerArtistDiscography " + artistId)
     const fromCache = deezerArtistDiscographyCache.get(artistId);
     if (fromCache) {
         return fromCache

@@ -387,13 +387,15 @@
     $: {
         tracksPage.size = $trackSelections.length
     }
+    let search = ""
+    $: paginatedSource = $trackSelections
+        .filter(x => !search || JSON.stringify(x.track).toLowerCase().includes(search.toLowerCase()))
+        .slice(
+            tracksPage.page * tracksPage.limit,             // start
+            tracksPage.page * tracksPage.limit + tracksPage.limit // end
+        );
 
-    $: paginatedSource = $trackSelections.slice(
-        tracksPage.page * tracksPage.limit,             // start
-        tracksPage.page * tracksPage.limit + tracksPage.limit // end
-    );
-
-    $: maxRank= $trackSelections.reduce((pre, cur)=>Math.max(pre,cur.track.rank),0)
+    $: maxRank = $trackSelections.reduce((pre, cur) => Math.max(pre, cur.track.rank), 0)
 </script>
 
 
@@ -408,7 +410,7 @@
             <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
             <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto inline-block" tabindex="-1">
                 <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound} on:selection={onArtistSelection}>
-                    <svelte:fragment slot="optionButton" let:option={artistOption} >
+                    <svelte:fragment slot="optionButton" let:option={artistOption}>
                         <ArtistSelectionComponent artist={artistOption.meta} on:click={()=>addArtistTracks(artistOption.meta.id, trackSelections)}/>
                     </svelte:fragment>
                 </DeezerAutocomplete>
@@ -528,24 +530,16 @@
         </div>
     </form>
 
-    <div class="flex justify-between w-full items-center gap-x-2 my-4">
-
-        <span>{$trackSelections?.filter(x => x.selected).length} Tracks ({data.playlist.tracks.data.length}
-            in playlist)</span>
-        <span>
-<!--                <button class="btn variant-filled-secondary">-->
-            <!--                    <IconSave/>-->
-            <!--                    <span>Update Tracks</span>-->
-            <!--                </button>-->
-            <!--                <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist} title="clear de-selected tracks">-->
-            <!--                    <ClearPlaylistIcon/>-->
-            <!--                    <span>clear</span>-->
-            <!--                </button>-->
-            </span>
-    </div>
     <span class="table-container">
             <table class="table table-compact my-4">
                 <thead>
+                <tr>
+                    <td colspan="3">
+                        <span>{$trackSelections?.filter(x => x.selected).length} Tracks ({data.playlist.tracks.data.length}
+                        in playlist)</span>
+                    </td>
+                    <td colspan="4"><input bind:value={search} class="input" title="Input (search)" type="search" placeholder="Search..."/></td>
+                </tr>
                 <tr class="">
                     <th>
                         <input type="checkbox" class="checkbox"
@@ -607,7 +601,7 @@
                         </Td>
 
                         <Td title={row.rank}>
-                            <Ratings value={5*row.rank/maxRank} max={5} >
+                            <Ratings value={5*row.rank/maxRank} max={5}>
                                 <svelte:fragment slot="empty"><IconStarEmpty/></svelte:fragment>
                                 <svelte:fragment slot="half"><IconStarHalf/></svelte:fragment>
                                 <svelte:fragment slot="full"><IconStarFull/></svelte:fragment>

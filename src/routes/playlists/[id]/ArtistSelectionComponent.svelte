@@ -1,6 +1,5 @@
 <script lang="ts">
     import type {DeezerArtist} from "$lib/DeezerApiModel";
-    import {createEventDispatcher} from 'svelte';
     import AddIcon from '~icons/ph/plus-circle-bold';
 
     export let artist: DeezerArtist

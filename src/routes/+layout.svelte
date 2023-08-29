@@ -33,7 +33,7 @@
             <nav>
                 <ul class="navItems">
                     {#if $page.data.currentUser}
-                        <li class="navItem"><a href="{base}/playlists">Your Playlists</a></li>
+                        <li class="navItem"><a href="{base}/playlists">My Playlists</a></li>
                         <li class="navItem"><a href="{base}/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>
                     {:else }
                         <li class="navItem"><a href="{base}/">Home</a></li>

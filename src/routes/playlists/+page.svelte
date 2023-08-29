@@ -23,10 +23,14 @@
         tracksPage.size = allPlaylists.length
     }
 
-    $: paginatedSource = allPlaylists.slice(
-        tracksPage.page * tracksPage.limit,             // start
-        tracksPage.page * tracksPage.limit + tracksPage.limit // end
-    );
+    let search = ""
+
+    $: paginatedSource = allPlaylists
+        .filter(x => !search || JSON.stringify(x).toLowerCase().includes(search.toLowerCase()))
+        .slice(
+            tracksPage.page * tracksPage.limit,             // start
+            tracksPage.page * tracksPage.limit + tracksPage.limit // end
+        );
 
 </script>
 
@@ -39,6 +43,11 @@
     <div class="table-container">
         <table class="table table-hover">
             <thead>
+            <tr>
+                <td colspan="1">
+                </td>
+                <td colspan="5"><input bind:value={search} class="input" title="Input (search)" type="search" placeholder="Search..."/></td>
+            </tr>
             <tr>
                 <th class="w-1/3">Title</th>
                 <th>Created on</th>
