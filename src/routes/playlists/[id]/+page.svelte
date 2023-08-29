@@ -10,7 +10,7 @@
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
+    import {getToastStore, Paginator, Ratings, SlideToggle} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
@@ -99,13 +99,13 @@
         const searchParams: DeezerSearchParams = {
             request_method: "POST",
         };
-        if (data.playlist.title) {
+        if (data.playlist.title !== undefined) {
             searchParams.title = data.playlist.title
         }
-        if (data.playlist.description) {
+        if (data.playlist.description !== undefined) {
             searchParams.description = data.playlist.description
         }
-        if (data.playlist.public) {
+        if (data.playlist.public !== undefined) {
             searchParams.public = data.playlist.public
         }
 
@@ -145,8 +145,6 @@
     }
 
     let updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
-
-    // updateTracksProgress.subscribe(w => console.log(w))
 
     async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
         if (!trackIds.length) {
@@ -243,7 +241,7 @@
             case 0:
                 console.log("no match by title", {unreadableTrack})
                 toastStore.trigger({
-                    message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}'`,
+                    message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' by '${unreadableTrack.artist.name}'`,
                     timeout: 3000
                 });
                 return undefined
@@ -264,7 +262,7 @@
                     case 0:
                         console.log("no match by title and album", {unreadableTrack})
                         toastStore.trigger({
-                            message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}'`,
+                            message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' by '${unreadableTrack.artist.name}'`,
                             timeout: 3000
                         });
                         return undefined
@@ -279,7 +277,7 @@
                         if (tracksByIsrc.length === 1) {
                             return tracksByIsrc[0]
                         }
-                        console.log("multple match by title", {unreadableTrack, matchingTracksByTitleAndAlbum})
+                        console.log("multiple match by title", {unreadableTrack, matchingTracksByTitleAndAlbum})
 
                         toastStore.trigger({
                             message: `Found multiple matching tracks for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' : ${matchingTracksByTitleAndAlbum.map(x => x.id)}`,
@@ -299,28 +297,36 @@
         const trackSelectionsList: TrackSelection[] = get(trackSelections);
         const readableBefore = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
         const unreadableTracks = trackSelectionsList.filter(x => x.selected && !x.track.readable);
-        for (const trackSelection of unreadableTracks) {
-            const unreadableTrack = trackSelection.track;
-            const alternativeTrack = await getAlternativeTrack(unreadableTrack);
-            if (alternativeTrack) {
-                // trackSelection.track = alternativeTrack
-                console.log("adding alternative to " + trackSelection.track.id + " : " + alternativeTrack.title)
-                trackSelection.selected = false
-                const insertionPoint = trackSelectionsList.indexOf(trackSelection);
-                trackSelectionsList.splice(insertionPoint + 1, 0, {
-                    selected: true,
-                    inPlaylist: false,
-                    track: alternativeTrack
-                });
-            }
-        }
-        const readableAfter = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
-        toastStore.trigger({
 
-            message: `Reattached ${readableAfter - readableBefore} track(s) to readable equivalents.<br/>(${trackSelectionsList.filter(x => x.selected).length - readableAfter} unreadable track remaining)`,
-            timeout: 10000
-        });
-        trackSelections.set(trackSelectionsList)
+        try {
+            for (let i = 0; i < unreadableTracks.length; i++) {
+                const trackSelection = unreadableTracks[i]
+                updateTracksProgress.set({message: `trying to fix track ${i} / ${unreadableTracks.length}`, value: i, max: unreadableTracks.length})
+
+                const unreadableTrack = trackSelection.track;
+                const alternativeTrack = await getAlternativeTrack(unreadableTrack);
+                if (alternativeTrack) {
+                    // trackSelection.track = alternativeTrack
+                    console.log("adding alternative to " + trackSelection.track.id + " : " + alternativeTrack.title)
+                    trackSelection.selected = false
+                    const insertionPoint = trackSelectionsList.indexOf(trackSelection);
+                    trackSelectionsList.splice(insertionPoint + 1, 0, {
+                        selected: true,
+                        inPlaylist: false,
+                        track: alternativeTrack
+                    });
+                }
+            }
+            const readableAfter = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
+            toastStore.trigger({
+                message: `Reattached ${readableAfter - readableBefore} track(s) to readable equivalents.<br/>(${trackSelectionsList.filter(x => x.selected).length - readableAfter} unreadable track remaining)`,
+                timeout: 10000
+            });
+            trackSelections.set(trackSelectionsList)
+        } finally {
+            updateTracksProgress.set(undefined)
+        }
+
 
     }
 
@@ -396,8 +402,8 @@
 
     $: maxRank = $trackSelections.reduce((pre, cur) => Math.max(pre, cur.track.rank), 0)
 
-    function addArtist(artist:DeezerArtist) {
-        if ($trackSelections.length===0) {
+    function addArtist(artist: DeezerArtist) {
+        if ($trackSelections.length === 0) {
             data.playlist.title = artist.name + " - Full Discography"
         }
         addArtistTracks(artist.id, trackSelections)
@@ -516,21 +522,26 @@
 
     <form class="mb-10 space-y-2">
 
-        <label class="label">
-            <span>Title</span>
-            <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
-        </label>
+        <div class="grid grid-cols-6">
+            <div class="col-span-5">
+                <label class="label">
+                    <span>Title</span>
+                    <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
+                </label>
+            </div>
+            <div>
+                <SlideToggle name="slider-label" bind:checked={data.playlist.public}>
+                    {#if data.playlist.public}Public{:else }Private{/if} playlist
+                </SlideToggle>
+            </div>
+        </div>
+
 
         <label class="label">
             <span>Description</span>
             <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
         </label>
-        <div class="flex place-content-start">
-            <!--            <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>-->
-            <!--                <IconSave/>-->
-            <!--                <span>Update playlist info</span>-->
-            <!--            </button>-->
-        </div>
+
     </form>
 
     <span class="table-container">
