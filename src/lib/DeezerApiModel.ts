@@ -1,3 +1,9 @@
+export interface CurrentUser {
+    id: number
+    name: string
+    picture: string
+    lang: string
+}
 
 export interface DeezerPlaylist {
     id: number

@@ -35,7 +35,6 @@ export async function callDeezer<T>(req: {
 }): Promise<T> {
     LOGGER(`calling ${req.apiPath}`)
     const url = new URL(req.apiPath, DeezerConfig.API_URL);
-    TokenCookie.get()
     const accessToken = TokenCookie.get()
     if (!accessToken) {
         throw error(500, "no accessToken in cookies")

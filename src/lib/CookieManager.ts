@@ -4,22 +4,6 @@ import type {CookieAttributes} from "js-cookie"
 
 const opts = {path: "/"};
 
-export function setCookie(cookies: Cookies, cookie: string, value: unknown) {
-    cookies.set(cookie, (JSON.stringify(value)), opts)
-}
-
-export function deleteCookie(cookies: Cookies, cookie: string) {
-    cookies.delete(cookie, opts)
-}
-
-export function getCookie(cookies: Cookies, cookie: string) {
-    const rawValue = cookies.get(cookie);
-    if (rawValue) {
-        return JSON.parse((rawValue))
-    }
-    return undefined
-}
-
 class CookieManager<T> {
     constructor(
         private name: string,
@@ -55,18 +39,6 @@ export const TokenCookie = new CookieManager<string>(COOKIE_PREFIX + 'token',
         sameSite: 'strict',
     })
 
-export interface CurrentUser {
-    id: number
-    name: string
-    picture: string
-    lang: string
-}
-
-export const UserCookie = new CookieManager<CurrentUser>(COOKIE_PREFIX + 'user',
-    {
-        expires: 30,
-        sameSite: 'strict',
-    })
 
 export const RedirectCookie = new CookieManager<string>(COOKIE_PREFIX + 'redirect',
     {

@@ -1,13 +1,11 @@
 <script lang="ts">
 
     import {browser} from "$app/environment";
-    import {goto} from "$app/navigation";
     import {page} from "$app/stores";
     import {env} from "$env/dynamic/public";
-    import {RedirectCookie, TokenCookie, UserCookie} from "$lib/CookieManager";
+    import {RedirectCookie, TokenCookie} from "$lib/CookieManager";
     import {DeezerConfig} from "$lib/DeezerConfig";
 
-    UserCookie.remove()
     TokenCookie.remove()
 
     const deezerAuthorizationUrl = DeezerConfig.AUTHORIZATION_URL

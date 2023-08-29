@@ -2,23 +2,12 @@
 
     import {goto, invalidateAll} from "$app/navigation";
     import {page} from "$app/stores";
-    import {RedirectCookie, TokenCookie, UserCookie} from "$lib/CookieManager";
-    import {callDeezer} from "$lib/DeezerCall";
+    import {RedirectCookie, TokenCookie} from "$lib/CookieManager";
 
 
     async function doLogin(access_token: string) {
         TokenCookie.set(access_token)
         await invalidateAll()
-
-        await callDeezer({apiPath: "/user/me", accessToken: access_token})
-            .then(userResponse => {
-
-                const {id, name, picture, lang} = userResponse as any
-                const user = {
-                    id, name, picture, lang
-                }
-                UserCookie.set(user)
-            });
 
         const redirectPath = RedirectCookie.get() || "/";
         RedirectCookie.remove()
