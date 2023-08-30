@@ -1,3 +1,7 @@
+<script context="module" lang="ts">
+    import {enableBodyScroll, disableBodyScroll} from 'body-scroll-lock'
+</script>
+
 <script lang="ts">
     import {invalidateAll} from "$app/navigation";
     import AudioPlayer from "$lib/AudioPlayer.svelte";
@@ -31,6 +35,11 @@
     import type {TrackSelection} from "./trackSelection";
     import {addAlbumTracks, addArtistTracks, removeAlbumTracks, removeArtistTracks} from "./trackSelection";
     import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
+    import {sortable} from 'svelte-agnostic-draggable'
+
+    import mapTouchToMouseFor from 'svelte-touch-to-mouse'
+
+    mapTouchToMouseFor('.sortable > tr')
 
     const toastStore = getToastStore();
 
@@ -99,10 +108,10 @@
         const searchParams: DeezerSearchParams = {
             request_method: "POST",
         };
-        if (data.playlist.title !== undefined) {
+        if (data.playlist.title) {
             searchParams.title = data.playlist.title
         }
-        if (data.playlist.description !== undefined) {
+        if (data.playlist.description) {
             searchParams.description = data.playlist.description
         }
         if (data.playlist.public !== undefined) {
@@ -408,6 +417,54 @@
         }
         addArtistTracks(artist.id, trackSelections)
     }
+
+
+    function onSortableActivate(e) {
+        console.log('Sortable was activated', e);
+        disableBodyScroll(document.body)
+    }
+
+    function onSortableDeactivate(e) {
+        console.log('Sortable was deactivated', e);
+        enableBodyScroll(document.body)
+    }
+
+    function onSortableReceive(e) {
+        console.log('list element was added', e)
+    }
+
+    function onSortableChange(e) {
+        console.log('sort order was changed', e)
+
+
+    }
+
+    function onSortableUpdate(e) {
+        console.log($trackSelections.map(x => x.track.title_short))
+        console.log(paginatedSource.map(x => x.track.title_short))
+        console.log('list onSortableUpdate', e)
+        const movedItem = paginatedSource[e.detail.previousIndex];
+        console.log({movedItem, paginatedSource, idx: e.detail.previousIndex})
+        trackSelections.update($trackSelections => {
+            console.log($trackSelections.map(x => x.track.title_short))
+            $trackSelections.splice($trackSelections.indexOf(movedItem), 1)
+            console.log($trackSelections.map(x => x.track.title_short))
+            // if (e.detail.newIndex > 0) {
+            const previousItem = paginatedSource[e.detail.newIndex];
+            console.log({previousItem, idx: e.detail.newIndex, paginatedSource})
+            $trackSelections.splice($trackSelections.indexOf(previousItem), 0, movedItem)
+            // } else {
+            //     const nextItem = paginatedSource[1];
+            //     console.log({nextItem})
+            //     $trackSelections.splice($trackSelections.indexOf(nextItem), 0, movedItem)
+            // }
+            console.log($trackSelections.map(x => x.track.title_short))
+            return $trackSelections
+        })
+        console.log(paginatedSource.map(x => x.track.title_short))
+
+    }
+
 </script>
 
 
@@ -570,8 +627,14 @@
                     <th>duration</th>
                 </tr>
                 </thead>
-                <tbody>
-                {#each paginatedSource as trackSelection, i}
+                <tbody use:sortable={{cursor:'grabbing',handle:".sortHandle"}} class="sortable"
+                       on:sortable:activate={onSortableActivate}
+                       on:sortable:deactivate={onSortableDeactivate}
+                       on:sortable:receive={onSortableReceive}
+                       on:sortable:update={onSortableUpdate}
+                       on:sortable:change={onSortableChange}
+                >
+                {#each paginatedSource as trackSelection(trackSelection.track.id)}
                     {@const row=trackSelection.track}
                     <tr class={computeRowClass(trackSelection)}
                         class:!text-red-500={!row.readable}
@@ -579,7 +642,7 @@
                         <Td>
                             <input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/>
                         </Td>
-                        <Td><span>{i + 1}</span></Td>
+                        <Td><span class="sortHandle">{trackSelection.track.id}</span></Td>
                         <Td justify="start">
                             <AudioPlayer src={row.preview} enabled={row.readable}/>
                             <a href={row.link} title="open track in Deezer web interface">
