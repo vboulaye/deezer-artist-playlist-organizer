@@ -99,10 +99,10 @@
         const searchParams: DeezerSearchParams = {
             request_method: "POST",
         };
-        if (data.playlist.title !== undefined) {
+        if (data.playlist.title) {
             searchParams.title = data.playlist.title
         }
-        if (data.playlist.description !== undefined) {
+        if (data.playlist.description) {
             searchParams.description = data.playlist.description
         }
         if (data.playlist.public !== undefined) {
