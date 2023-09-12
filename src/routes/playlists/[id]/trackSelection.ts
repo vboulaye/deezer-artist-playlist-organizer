@@ -1,5 +1,6 @@
 import type {DeezerAlbum, DeezerTrack} from "$lib/DeezerApiModel";
 import {getAlbumTracks, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
+import {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 import type {Writable} from "svelte/store";
 
 export interface TrackSelection {
@@ -123,4 +124,20 @@ export async function addAlbumTracks(album: DeezerAlbum, trackSelections: Writab
 
         return trackSelectionsList
     })
+}
+
+
+export function getTrackCount(artistId: number, trackSelections: TrackSelection[]): number {
+    return trackSelections.filter(t => t.track.artist.id === artistId && t.selected).length
+}
+
+
+export function purgePlaylistTrackSelections(trackSelections: TrackSelection[], toastStore: ToastStore): TrackSelection[] {
+    const clearedSelections = trackSelections
+        .filter(trackSelection => trackSelection.selected || trackSelection.inPlaylist);
+    toastStore.trigger({
+        message: `Removed ${trackSelections.length - clearedSelections.length} track(s) from the playlist`,
+        timeout: 3000
+    });
+    return clearedSelections
 }

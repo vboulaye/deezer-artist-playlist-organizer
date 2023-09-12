@@ -2,9 +2,8 @@
     import {AppShell} from '@skeletonlabs/skeleton';
 </script>
 
-
-<AppShell slotSidebarLeft="mx-2 h-100vh overflow-scroll w-1/5"
-          slotSidebarRight="mx-2 h-100vh overflow-scroll w-1/5"
+<AppShell slotSidebarLeft="mx-2 h-100vh overflow-scroll w-0 lg:w-1/5"
+          slotSidebarRight="mx-2 h-100vh overflow-scroll w-0 lg:w-1/5"
           slotPageContent="h-100vh overflow-scroll"
 >
     <svelte:fragment slot="sidebarLeft">

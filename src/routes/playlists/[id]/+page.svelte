@@ -1,16 +1,13 @@
 <script lang="ts">
-    import {invalidateAll} from "$app/navigation";
     import AudioPlayer from "$lib/AudioPlayer.svelte";
-    import type {DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
-    import {getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
-    import type {DeezerSearchParams} from "$lib/DeezerCall";
+    import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {callDeezer} from "$lib/DeezerCall";
     import DeezerAutocomplete from "$lib/html/DeezerAutocomplete.svelte";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
     import Td from "$lib/html/Td.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from '@skeletonlabs/skeleton';
-    import {getToastStore, Paginator, Ratings, SlideToggle} from '@skeletonlabs/skeleton';
+    import {getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
 
     import humanizeDuration from "humanize-duration";
     import type {Writable} from "svelte/store";
@@ -27,12 +24,26 @@
     import IconStarFull from '~icons/ph/star-fill';
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
+    import {relinkNonReadableTrackSelections} from "./alternativeTrackGetter";
     import ArtistSelectionComponent from "./ArtistSelectionComponent.svelte";
+    import type {PlaylistArtistsSort} from "./artistsSorter";
+    import {sortArtistsWithNewSort} from "./artistsSorter";
+    import PlaylistInfo from "./PlaylistInfo.svelte";
+    import {savePlaylist} from "./playlistUpdater";
     import type {TrackSelection} from "./trackSelection";
-    import {addAlbumTracks, addArtistTracks, removeAlbumTracks, removeArtistTracks} from "./trackSelection";
+    import {
+        addAlbumTracks,
+        addArtistTracks,
+        getTrackCount, purgePlaylistTrackSelections,
+        removeAlbumTracks,
+        removeArtistTracks
+    } from "./trackSelection";
     import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
+    import type {UpdateTracksProgress} from "./updateTracksProgress";
 
     const toastStore = getToastStore();
+
+    const updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
 
     export let data: PageData
 
@@ -41,21 +52,15 @@
     $: {
         playlistArtists.set(data.topArtists)
     }
-
-
     const trackSelections = writable<TrackSelection[]>([])
+
     $: {
         const newTrackSelections = data.playlist.tracks.data
             .map(track => ({track, inPlaylist: true, selected: true}));
         trackSelections.set(newTrackSelections)
     }
 
-    interface PlaylistArtistsSort {
-        ascending: boolean
-        orderBy: "trackCount" | "alphabetical"
-    }
-
-    const playlistArtistsSort: PlaylistArtistsSort = {
+    export const playlistArtistsSort: PlaylistArtistsSort = {
         ascending: false,
         orderBy: "trackCount"
     }
@@ -67,283 +72,22 @@
         if (newSort.orderBy !== undefined) {
             playlistArtistsSort.orderBy = newSort.orderBy
         }
-        playlistArtists.update(playlistArtists => {
-            const direction = playlistArtistsSort.ascending ? 1 : -1;
-
-
-            type Comparison = (a1: DeezerArtist, a2: DeezerArtist) => number
-            const compareTrackCount = (a1: DeezerArtist, a2: DeezerArtist) => (getTrackCount(a1.id) - getTrackCount(a2.id))
-            const compareName = (a1: DeezerArtist, a2: DeezerArtist) => (a1.name.localeCompare(a2.name))
-
-            const compare = (main: Comparison, second: Comparison) => (a1: DeezerArtist, a2: DeezerArtist) => {
-                const mainCompare = main(a1, a2);
-                if (mainCompare === 0) {
-                    return second(a1, a2);
-                }
-                return mainCompare
-            }
-
-            const deezerArtists = playlistArtists.sort((a1, a2) => {
-                switch (playlistArtistsSort.orderBy) {
-                    case "trackCount":
-                        return direction * compare(compareTrackCount, compareName)(a1, a2)
-                    case "alphabetical":
-                        return direction * compare(compareName, compareTrackCount,)(a1, a2)
-                }
-            });
-            return deezerArtists
-        })
-    }
-
-    async function savePlaylist() {
-        const searchParams: DeezerSearchParams = {
-            request_method: "POST",
-        };
-        if (data.playlist.title) {
-            searchParams.title = data.playlist.title
-        }
-        if (data.playlist.description) {
-            searchParams.description = data.playlist.description
-        }
-        if (data.playlist.public !== undefined) {
-            searchParams.public = data.playlist.public
-        }
-
-        try {
-            const updateResult = await callDeezer({
-                apiPath: `/playlist/${data.playlist.id}`,
-                searchParams: searchParams
-            });
-
-            toastStore.trigger({
-                message: `Updated playlist: ${updateResult ? "OK" : "KO"}`,
-                timeout: 3000
-            });
-
-        } catch (e) {
-            toastStore.trigger({
-                message: `Updated playlist: error ${e}`,
-                timeout: 3000
-            });
-        }
-
-        await saveTracks()
-    }
-
-    function window<T>(arr: T[], size: number) {
-        const groupedArray = [];
-        for (let i = 0; i < arr.length; i += size) {
-            groupedArray.push(arr.slice(i, i + size));
-        }
-        return groupedArray;
-    }
-
-    interface UpdateTracksProgress {
-        message: string
-        value: number
-        max: number
-    }
-
-    let updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
-
-    async function updateTracks(trackIds: number[], requestMethod: "POST" | "DELETE", param: string) {
-        if (!trackIds.length) {
-            return
-        }
-        updateTracksProgress.set({message: `sending 0/${trackIds.length} ${requestMethod} ${param} `, value: 0, max: trackIds.length})
-        let count = 0
-        const windowSize = 100;
-        for (const w of window(trackIds, windowSize)) {
-            count += windowSize
-            updateTracksProgress.set({message: `sending ${count} / ${trackIds.length} ${requestMethod} ${param} `, value: count, max: trackIds.length})
-            console.log(`sending ${requestMethod} ${param}=${JSON.stringify(w)}`)
-            const searchParams: DeezerSearchParams = {
-                request_method: requestMethod,
-            };
-            searchParams[param] = w.join(',')
-            const updateResult = await callDeezer({
-                apiPath: `/playlist/${data.playlist.id}/tracks`,
-                searchParams: searchParams
-            });
-            console.log({updateResult})
-            if (!updateResult) {
-                throw new Error(`unable to send ${requestMethod} ${param}=${JSON.stringify(w)}`)
-            }
-        }
-    }
-
-    async function saveTracks() {
-
-        try {
-            const addedTrackIds = $trackSelections
-                .filter(trackSelection => trackSelection.selected && !trackSelection.inPlaylist)
-                .map(trackSelection => trackSelection.track.id)
-            await updateTracks(addedTrackIds, "POST", "songs")
-
-            const deletedTrackIds = $trackSelections
-                .filter(trackSelection => !trackSelection.selected && trackSelection.inPlaylist)
-                .map(trackSelection => trackSelection.track.id)
-            await updateTracks(deletedTrackIds, "DELETE", "songs")
-
-            if (addedTrackIds.length > 0) {
-                const orderedTrackIds = $trackSelections
-                    .filter(trackSelection => trackSelection.selected)
-                    .map(trackSelection => trackSelection.track.id)
-                await updateTracks(orderedTrackIds, "POST", "order")
-            }
-
-            updateTracksProgress.set(undefined)
-
-            if (addedTrackIds.length || deletedTrackIds.length) {
-                const refreshToastId = toastStore.trigger({
-                    message: `Updated playlist tracks, refreshing playlist data`,
-                });
-                await invalidateAll()
-                toastStore.close(refreshToastId)
-            }
-        } catch (e) {
-            toastStore.trigger({
-                message: `Updated playlist tracks: error ${e}`,
-                timeout: 3000
-            });
-        } finally {
-            updateTracksProgress.set(undefined)
-        }
-    }
-
-    async function getAlternativeTrack(unreadableTrack: DeezerTrack): Promise<DeezerTrack | undefined> {
-        const deezerArtistDiscography = await getDeezerArtistDiscography(unreadableTrack.artist.id);
-        if (!deezerArtistDiscography) {
-            toastStore.trigger({
-                message: `Could not find artist ${unreadableTrack.artist.name}`,
-                timeout: 3000
-            });
-            return undefined
-        }
-
-
-        const artistTracks = deezerArtistDiscography
-            .flatMap(album => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const {tracks: _, ...parentAlbum} = album
-                return album.tracks
-                    .map(track => ({...track, album: parentAlbum}));
-            })
-            .filter(x => x.id !== unreadableTrack.id && x.readable);
-
-        const comparisonOptions = {sensitivity: "base", ignorePunctuation: true, numeric: false, usage: "search"} as Intl.CollatorOptions;
-
-        const matchingTracksByTitle = artistTracks
-            .filter(track => track.title.localeCompare(unreadableTrack.title, undefined, comparisonOptions) === 0)
-
-
-        switch (matchingTracksByTitle.length) {
-            case 0:
-                console.log("no match by title", {unreadableTrack})
-                toastStore.trigger({
-                    message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' by '${unreadableTrack.artist.name}'`,
-                    timeout: 3000
-                });
-                return undefined
-            case 1:
-                return matchingTracksByTitle[0]
-
-            default: {
-                const tracksByIsrc = Object.values(matchingTracksByTitle.reduce((acc, track) => {
-                    acc[track.isrc] = track;
-                    return acc
-                }, {} as { [k: string]: DeezerTrack }));
-                if (tracksByIsrc.length === 1) {
-                    return tracksByIsrc[0]
-                }
-                const matchingTracksByTitleAndAlbum = matchingTracksByTitle
-                    .filter(track => track.album.title.localeCompare(unreadableTrack.album.title, undefined, comparisonOptions) === 0)
-                switch (matchingTracksByTitleAndAlbum.length) {
-                    case 0:
-                        console.log("no match by title and album", {unreadableTrack})
-                        toastStore.trigger({
-                            message: `Could not find matching track for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' by '${unreadableTrack.artist.name}'`,
-                            timeout: 3000
-                        });
-                        return undefined
-                    case 1:
-                        return matchingTracksByTitleAndAlbum[0]
-
-                    default: {
-                        const tracksByIsrc = Object.values(matchingTracksByTitleAndAlbum.reduce((acc, track) => {
-                            acc[track.isrc] = track;
-                            return acc
-                        }, {} as { [k: string]: DeezerTrack }));
-                        if (tracksByIsrc.length === 1) {
-                            return tracksByIsrc[0]
-                        }
-                        console.log("multiple match by title", {unreadableTrack, matchingTracksByTitleAndAlbum})
-
-                        toastStore.trigger({
-                            message: `Found multiple matching tracks for '${unreadableTrack.title}' in album '${unreadableTrack.album.title}' : ${matchingTracksByTitleAndAlbum.map(x => x.id)}`,
-                            timeout: 3000
-                        });
-                        return undefined;
-
-                    }
-                }
-            }
-
-        }
-
+        playlistArtists.update(playlistArtists => sortArtistsWithNewSort(playlistArtists, playlistArtistsSort, newSort, $trackSelections))
     }
 
     async function relinkNonReadableTracks() {
-        const trackSelectionsList: TrackSelection[] = get(trackSelections);
-        const readableBefore = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
-        const unreadableTracks = trackSelectionsList.filter(x => x.selected && !x.track.readable);
-
         try {
-            for (let i = 0; i < unreadableTracks.length; i++) {
-                const trackSelection = unreadableTracks[i]
-                updateTracksProgress.set({message: `trying to fix track ${i} / ${unreadableTracks.length}`, value: i, max: unreadableTracks.length})
-
-                const unreadableTrack = trackSelection.track;
-                const alternativeTrack = await getAlternativeTrack(unreadableTrack);
-                if (alternativeTrack) {
-                    // trackSelection.track = alternativeTrack
-                    console.log("adding alternative to " + trackSelection.track.id + " : " + alternativeTrack.title)
-                    trackSelection.selected = false
-                    const insertionPoint = trackSelectionsList.indexOf(trackSelection);
-                    trackSelectionsList.splice(insertionPoint + 1, 0, {
-                        selected: true,
-                        inPlaylist: false,
-                        track: alternativeTrack
-                    });
-                }
-            }
-            const readableAfter = trackSelectionsList.filter(x => x.selected && x.track.readable).length;
-            toastStore.trigger({
-                message: `Reattached ${readableAfter - readableBefore} track(s) to readable equivalents.<br/>(${trackSelectionsList.filter(x => x.selected).length - readableAfter} unreadable track remaining)`,
-                timeout: 10000
-            });
+            const trackSelectionsList: TrackSelection[] = get(trackSelections);
+            await relinkNonReadableTrackSelections(trackSelectionsList, toastStore, updateTracksProgress);
             trackSelections.set(trackSelectionsList)
         } finally {
             updateTracksProgress.set(undefined)
         }
-
-
     }
 
     function purgePlaylist() {
-        trackSelections.update(trackSelectionsList => {
-            const clearedSelections = trackSelectionsList
-                .filter(trackSelection => trackSelection.selected || trackSelection.inPlaylist);
-            toastStore.trigger({
-                message: `Removed ${trackSelectionsList.length - clearedSelections.length} track(s) from the playlist`,
-                timeout: 3000
-            });
-            return clearedSelections
-        })
+        trackSelections.update(trackSelectionsList => purgePlaylistTrackSelections(trackSelectionsList, toastStore))
     }
-
-
-    let debug = false
 
 
     function computeRowClass(trackSelection: TrackSelection): string {
@@ -378,9 +122,6 @@
         });
     })
 
-    function getTrackCount(artistId: number): number {
-        return $trackSelections.filter(t => t.track.artist.id === artistId && t.selected).length
-    }
 
     let tracksPage = {
         page: 0,
@@ -457,14 +198,15 @@
            </span>
             <ul class="list">
                 {#each $playlistArtists as topArtist}
-                    {@const trackCount=getTrackCount(topArtist.id)}
+                    {@const trackCount=getTrackCount(topArtist.id, $trackSelections)}
                     <li>
                     <span class="flex flex-row justify-between w-full items-center gap-x-2">
                         <a href={topArtist.link} title="open artist in Deezer web interface">
                               <HorizontalSpan>
                                 <img src={topArtist.picture_small} alt="{topArtist.name}"/>
                                 <span> {topArtist.name}</span>
-                                   <small title="artist has {trackCount} tracks in the playlist ">(#{trackCount})</small>
+                                   <small title="artist has {trackCount} tracks in the playlist ">(#{trackCount}
+                                       )</small>
                               </HorizontalSpan>
                         </a>
                         <div class="btn-group-vertical btn btn-sm gap-y-1">
@@ -490,7 +232,8 @@
     <svelte:fragment slot="sidebarRight">
         <div class="flex flex-col gap-y-4 w-4/5">
             <h3>Save to Deezer</h3>
-            <button class="btn variant-filled-primary" on:click|preventDefault={savePlaylist}>
+            <button class="btn variant-filled-primary"
+                    on:click|preventDefault={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}>
                 <IconSave/>
                 <span>Update playlist</span>
             </button>
@@ -515,44 +258,24 @@
                 <span>remove de-selected tracks</span>
             </button>
 
-            <!--        <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>-->
 
         </div>
     </svelte:fragment>
 
-    <form class="mb-10 space-y-2">
 
-        <div class="grid grid-cols-6">
-            <div class="col-span-5">
-                <label class="label">
-                    <span>Title</span>
-                    <input class="input" type="text" placeholder="title" bind:value={data.playlist.title}/>
-                </label>
-            </div>
-            <div>
-                <SlideToggle name="slider-label" bind:checked={data.playlist.public}>
-                    {#if data.playlist.public}Public{:else }Private{/if} playlist
-                </SlideToggle>
-            </div>
-        </div>
-
-
-        <label class="label">
-            <span>Description</span>
-            <textarea class="textarea" rows="4" placeholder="description" bind:value={data.playlist.description}/>
-        </label>
-
-    </form>
+    <PlaylistInfo playlist={data.playlist}/>
 
     <span class="table-container">
             <table class="table table-compact my-4">
                 <thead>
                 <tr>
                     <td colspan="3">
-                        <span>{$trackSelections?.filter(x => x.selected).length} Tracks ({data.playlist.tracks.data.length}
+                        <span>{$trackSelections?.filter(x => x.selected).length}
+                            Tracks ({data.playlist.tracks.data.length}
                             in playlist)</span>
                     </td>
-                    <td colspan="4"><input bind:value={search} class="input" title="Input (search)" type="search" placeholder="Search..."/></td>
+                    <td colspan="4"><input bind:value={search} class="input" title="Input (search)" type="search"
+                                           placeholder="Search..."/></td>
                 </tr>
                 <tr class="">
                     <th>
