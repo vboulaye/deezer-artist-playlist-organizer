@@ -1,6 +1,6 @@
 import type {DeezerAlbum, DeezerTrack} from "$lib/DeezerApiModel";
 import {getAlbumTracks, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
-import {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
+import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 import type {Writable} from "svelte/store";
 
 export interface TrackSelection {
