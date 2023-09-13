@@ -4,12 +4,10 @@
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
     import Td from "$lib/html/Td.svelte";
     import {getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
+    import {savePlaylist} from "./playlistUpdater";
 
     import humanizeDuration from "humanize-duration";
     import {get, writable} from "svelte/store";
-    import ClearPlaylistIcon from '~icons/ph/backspace-bold';
-    import IconSave from '~icons/ph/cloud-check-bold'
-    import RelinkTracksIcon from '~icons/ph/link-bold';
     import IconStarEmpty from '~icons/ph/star-bold';
     import IconStarHalf from '~icons/ph/star-duotone';
     import IconStarFull from '~icons/ph/star-fill';
@@ -18,7 +16,6 @@
     import {relinkNonReadableTrackSelections} from "./alternativeTrackGetter";
     import ArtistsFinder from "./ArtistsFinder.svelte";
     import PlaylistInfo from "./PlaylistInfo.svelte";
-    import {savePlaylist} from "./playlistUpdater";
     import type {TrackSelection} from "./trackSelection";
     import {
         addAlbumTracks,
@@ -30,6 +27,10 @@
     import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
     import type {UpdateTracksProgress} from "./updateTracksProgress";
     import PlaylistArtists from "./PlaylistArtists.svelte";
+    import PlaylistSaveButton from "./PlaylistSaveButton.svelte";
+    import PlaylistRelinkButton from "./PlaylistRelinkButton.svelte";
+    import PlaylistCleanButton from "./PlaylistCleanButton.svelte";
+    import ProgressBar from "./ProgressBar.svelte";
 
     const toastStore = getToastStore();
 
@@ -38,12 +39,11 @@
     export let data: PageData
 
     const playlistArtists = writable<DeezerArtist[]>([])
-
     $: {
         playlistArtists.set(data.topArtists)
     }
-    const trackSelections = writable<TrackSelection[]>([])
 
+    const trackSelections = writable<TrackSelection[]>([])
     $: {
         const newTrackSelections = data.playlist.tracks.data
             .map(track => ({track, inPlaylist: true, selected: true}));
@@ -102,6 +102,7 @@
         }
         addArtistTracks(artist.id, trackSelections)
     }
+
 </script>
 
 
@@ -115,33 +116,17 @@
     <svelte:fragment slot="sidebarRight">
         <div class="flex flex-col gap-y-4 w-4/5">
             <h3>Save to Deezer</h3>
-            <button class="btn variant-filled-primary"
-                    on:click|preventDefault={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}>
-                <IconSave/>
-                <span>Update playlist</span>
-            </button>
+            <PlaylistSaveButton
+                    on:click={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}/>
 
-            {#if $updateTracksProgress}
-                <span>{$updateTracksProgress.message}</span>
-                <progress value={$updateTracksProgress.value} max={$updateTracksProgress.max}/>
-            {/if}
 
+            <ProgressBar {updateTracksProgress}/>
             <h3>Prepare playlist</h3>
-            <button class="btn variant-filled-tertiary" on:click|preventDefault={relinkNonReadableTracks}
-                    disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}
-                    title="try to find an equivalent of tracks that are not readable anymore in deezer (colored in red in the table)">
-                <RelinkTracksIcon/>
-                <span>fix non readable tracks</span>
-            </button>
-            <button class="btn variant-filled-tertiary" on:click|preventDefault={purgePlaylist}
-                    disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}
-                    title="remove de-selected new tracks"
-            >
-                <ClearPlaylistIcon/>
-                <span>remove de-selected tracks</span>
-            </button>
+            <PlaylistRelinkButton on:click={relinkNonReadableTracks}
+                                  disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}/>
 
-
+            <PlaylistCleanButton on:click={purgePlaylist}
+                                 disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}/>
         </div>
     </svelte:fragment>
 
@@ -165,7 +150,7 @@
                         <input type="checkbox" class="checkbox"
                                checked={paginatedSource.filter(x=>x.selected).length===paginatedSource.length && paginatedSource.length>0}
                                indeterminate={paginatedSource.filter(x=>x.selected).length!==paginatedSource.length && paginatedSource.filter(x=>x.selected).length>0}
-                               on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target.checked); trackSelections.update(x=>x)}}
+                               on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target?.checked); trackSelections.update(x=>x)}}
                         />
                     </th>
                     <th>Pos.</th>
@@ -183,7 +168,8 @@
                         class:!text-red-500={!row.readable}
                     >
                         <Td>
-                            <input type="checkbox" class="checkbox" bind:checked={trackSelection.selected}/>
+                            <input type="checkbox" class="checkbox"
+                                   bind:checked={trackSelection.selected}/>
                         </Td>
                         <Td><span>{i + 1}</span></Td>
                         <Td justify="start">
