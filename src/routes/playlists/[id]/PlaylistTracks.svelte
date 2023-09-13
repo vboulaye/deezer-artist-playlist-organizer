@@ -88,12 +88,12 @@
                                on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target?.checked); trackSelections.update(x=>x)}}
                         />
                     </th>
-                    <th>Pos.</th>
-                    <th >Title</th>
+                    <th class="largeonly">Pos.</th>
+                    <th>Title</th>
                     <th>Album</th>
                     <th>Artist</th>
-                    <th>rank</th>
-                    <th class="w-16">duration</th>
+                    <th class="largeonly">rank</th>
+                    <th class="largeonly w-16">duration</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -106,7 +106,7 @@
                             <input type="checkbox" class="checkbox"
                                    bind:checked={trackSelection.selected}/>
                         </Td>
-                        <Td><span>{i + 1}</span></Td>
+                        <Td class="largeonly"><span>{i + 1}</span></Td>
                         <Td justify="start">
                             <AudioPlayer src={row.preview} enabled={row.readable}/>
                             <a href={row.link} title="open track in Deezer web interface">
@@ -141,14 +141,14 @@
 
                         </Td>
 
-                        <Td title={row.rank}>
+                        <Td class="largeonly" title={row.rank}>
                             <Ratings value={5*row.rank/maxRank} max={5}>
                                 <svelte:fragment slot="empty"><IconStarEmpty/></svelte:fragment>
                                 <svelte:fragment slot="half"><IconStarHalf/></svelte:fragment>
                                 <svelte:fragment slot="full"><IconStarFull/></svelte:fragment>
                             </Ratings>
                         </Td>
-                        <Td>{shortEnglishHumanizer(row.duration * 1000)}
+                        <Td class="largeonly" >{shortEnglishHumanizer(row.duration * 1000)}
                             <span class="grow"></span>
                         </Td>
                     </tr>

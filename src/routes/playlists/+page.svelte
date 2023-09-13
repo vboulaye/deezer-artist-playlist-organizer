@@ -50,8 +50,8 @@
             </tr>
             <tr>
                 <th class="w-1/3">Title</th>
-                <th class="large">Created on</th>
-                <th class="large">Public?</th>
+                <th class="largeonly">Created on</th>
+                <th class="largeonly">Public?</th>
                 <th># Tracks</th>
                 <th>duration</th>
             </tr>
@@ -67,8 +67,8 @@
                             </div>
                         </a>
                     </td>
-                    <td class="items-center large">{playlist.creation_date}</td>
-                    <td class="large"><input class="checkbox" type="checkbox" checked={playlist.public} disabled/></td>
+                    <td class="items-center largeonly">{playlist.creation_date}</td>
+                    <td class="largeonly"><input class="checkbox" type="checkbox" checked={playlist.public} disabled/></td>
                     <td>{playlist.nb_tracks}</td>
                     <td>{humanizeDuration(playlist.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
                 </tr>
@@ -91,7 +91,5 @@
 </PlaylistApplicationShell>
 
 <style>
-    @media (max-width: 800px) {
-        .large {display: none}
-    }
+
 </style>
