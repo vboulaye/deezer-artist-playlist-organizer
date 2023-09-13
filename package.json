@@ -13,7 +13,8 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
 		"test:integration": "playwright test",
-		"test:unit": "vitest"
+		"test:unit": "vitest",
+		"clean": "rm -rf build .svelte-kit"
 	},
 	"devDependencies": {
 		"@iconify-json/jam": "^1.1.5",
