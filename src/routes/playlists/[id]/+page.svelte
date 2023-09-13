@@ -3,7 +3,7 @@
     import type {DeezerArtist} from "$lib/DeezerApiModel";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
     import Td from "$lib/html/Td.svelte";
-    import {getToastStore, Paginator, Ratings} from '@skeletonlabs/skeleton';
+    import {getToastStore, Paginator, Ratings, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {savePlaylist} from "./playlistUpdater";
 
     import humanizeDuration from "humanize-duration";
@@ -73,37 +73,61 @@
         addArtistTracks(artist.id, trackSelections)
     }
 
+    enum TabIndex {
+        DESCRIPTION,
+        TRACKS,
+        PLAYLIST_ARTISTS,
+        SEARCH_ARTISTS,
+    }
+
+    let tabIndex: TabIndex = TabIndex.TRACKS
 </script>
 
 
 <PlaylistApplicationShell>
 
-    <svelte:fragment slot="sidebarLeft">
-        <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
-        <PlaylistArtists {playlistArtists} {trackSelections}/>
+
+    <svelte:fragment slot="pageHeader">
+        <PlaylistSaveButton
+                on:click={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}/>
+
+        <PlaylistRelinkButton on:click={relinkNonReadableTracks}
+                              disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}/>
+
+        <PlaylistCleanButton on:click={purgePlaylist}
+                             disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}/>
+        <ProgressBar {updateTracksProgress}/>
     </svelte:fragment>
 
-    <svelte:fragment slot="sidebarRight">
-        <div class="flex flex-col gap-y-4 w-4/5">
-            <h3>Save to Deezer</h3>
-            <PlaylistSaveButton
-                    on:click={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}/>
+    <TabGroup>
+        <Tab bind:group={tabIndex} name="tabTracks" value={TabIndex.TRACKS}>tracks</Tab>
+        <Tab bind:group={tabIndex} name="tabMain" value={TabIndex.DESCRIPTION}>
+            <!--            <svelte:fragment slot="lead">(icon)</svelte:fragment>-->
+            description
+        </Tab>
+        <Tab bind:group={tabIndex} name="tabPlaylistArtists" value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
+        <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
+        <!-- Tab Panels --->
+        <svelte:fragment slot="panel">
+            {#if tabIndex === TabIndex.DESCRIPTION}
+                <PlaylistInfo playlist={data.playlist}/>
+            {:else if tabIndex === TabIndex.TRACKS}
+                <PlaylistTracks {trackSelections}/>
+            {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
+                <p><i>
+                    you can add/remove all tracks from a playlist artist from here
+                </i></p>
+                <PlaylistArtists {playlistArtists} {trackSelections}/>
+            {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
+                <p class="my-4"><i>
+                    you can add all tracks from a new artist from here
+                </i></p>
+                <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
+            {/if}
+        </svelte:fragment>
+    </TabGroup>
 
 
-            <ProgressBar {updateTracksProgress}/>
-            <h3>Prepare playlist</h3>
-            <PlaylistRelinkButton on:click={relinkNonReadableTracks}
-                                  disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}/>
-
-            <PlaylistCleanButton on:click={purgePlaylist}
-                                 disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}/>
-        </div>
-    </svelte:fragment>
-
-
-    <PlaylistInfo playlist={data.playlist}/>
-
-    <PlaylistTracks {trackSelections}/>
 </PlaylistApplicationShell>
 
 <style>

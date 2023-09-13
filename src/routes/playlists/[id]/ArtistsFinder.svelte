@@ -37,14 +37,10 @@
 
 </script>
 
-
-<span class=" my-4">
-    <span class="mb-2">
-        <HorizontalSpan><h4>Search Artist </h4></HorizontalSpan>
-    </span>
+<span class="my-4">
 
     <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
-    <span class="card w-full max-w-sm max-h-48 p-4 overflow-y-auto inline-block" tabindex="-1">
+    <span class="card w-full max-h-48 p-4 overflow-y-auto inline-block" tabindex="-1">
         <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound}>
             <svelte:fragment slot="optionButton" let:option={artistOption}>
                 <ArtistSelectionComponent artist={artistOption.meta}

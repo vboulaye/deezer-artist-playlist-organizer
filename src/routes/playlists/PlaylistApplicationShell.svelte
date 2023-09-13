@@ -12,6 +12,15 @@
     <svelte:fragment slot="sidebarRight">
         <slot name="sidebarRight"/>
     </svelte:fragment>
+    <svelte:fragment slot="pageHeader">
+        <slot name="pageHeader"/>
+    </svelte:fragment>
+    <svelte:fragment slot="footer">
+        <slot name="footer"/>
+    </svelte:fragment>
+    <svelte:fragment slot="header">
+        <slot name="header"/>
+    </svelte:fragment>
 
     <slot/>
 </AppShell>
