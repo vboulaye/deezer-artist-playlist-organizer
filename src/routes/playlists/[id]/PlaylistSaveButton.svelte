@@ -2,7 +2,7 @@
     import IconSave from '~icons/ph/cloud-check-bold'
 </script>
 
-<button class="btn variant-filled-primary"
+<button class=" variant-filled-primary"
         on:click|preventDefault>
     <IconSave/>
     <span>Update playlist</span>

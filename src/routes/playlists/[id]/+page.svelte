@@ -1,37 +1,22 @@
 <script lang="ts">
-    import AudioPlayer from "$lib/AudioPlayer.svelte";
     import type {DeezerArtist} from "$lib/DeezerApiModel";
-    import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
-    import Td from "$lib/html/Td.svelte";
-    import {getToastStore, Paginator, Ratings, Tab, TabGroup} from '@skeletonlabs/skeleton';
-    import {savePlaylist} from "./playlistUpdater";
-
-    import humanizeDuration from "humanize-duration";
+    import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {get, writable} from "svelte/store";
-    import IconStarEmpty from '~icons/ph/star-bold';
-    import IconStarHalf from '~icons/ph/star-duotone';
-    import IconStarFull from '~icons/ph/star-fill';
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
     import {relinkNonReadableTrackSelections} from "./alternativeTrackGetter";
     import ArtistsFinder from "./ArtistsFinder.svelte";
-    import PlaylistInfo from "./PlaylistInfo.svelte";
-    import type {TrackSelection} from "./trackSelection";
-    import {
-        addAlbumTracks,
-        addArtistTracks,
-        purgePlaylistTrackSelections,
-        removeAlbumTracks,
-        removeArtistTracks
-    } from "./trackSelection";
-    import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
-    import type {UpdateTracksProgress} from "./updateTracksProgress";
     import PlaylistArtists from "./PlaylistArtists.svelte";
-    import PlaylistSaveButton from "./PlaylistSaveButton.svelte";
-    import PlaylistRelinkButton from "./PlaylistRelinkButton.svelte";
     import PlaylistCleanButton from "./PlaylistCleanButton.svelte";
-    import ProgressBar from "./ProgressBar.svelte";
+    import PlaylistInfo from "./PlaylistInfo.svelte";
+    import PlaylistRelinkButton from "./PlaylistRelinkButton.svelte";
+    import PlaylistSaveButton from "./PlaylistSaveButton.svelte";
     import PlaylistTracks from "./PlaylistTracks.svelte";
+    import {savePlaylist} from "./playlistUpdater";
+    import ProgressBar from "./ProgressBar.svelte";
+    import type {TrackSelection} from "./trackSelection";
+    import {addArtistTracks, purgePlaylistTrackSelections} from "./trackSelection";
+    import type {UpdateTracksProgress} from "./updateTracksProgress";
 
     const toastStore = getToastStore();
 
@@ -88,14 +73,19 @@
 
 
     <svelte:fragment slot="pageHeader">
-        <PlaylistSaveButton
-                on:click={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}/>
 
-        <PlaylistRelinkButton on:click={relinkNonReadableTracks}
-                              disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}/>
+        <div class="btn-group variant-filled">
+            <PlaylistSaveButton
+                    on:click={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}/>
 
-        <PlaylistCleanButton on:click={purgePlaylist}
-                             disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}/>
+            <PlaylistRelinkButton on:click={relinkNonReadableTracks}
+                                  disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}/>
+
+            <PlaylistCleanButton on:click={purgePlaylist}
+                                 disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}/>
+        </div>
+
+
         <ProgressBar {updateTracksProgress}/>
     </svelte:fragment>
 
@@ -112,7 +102,7 @@
             {#if tabIndex === TabIndex.DESCRIPTION}
                 <PlaylistInfo playlist={data.playlist}/>
             {:else if tabIndex === TabIndex.TRACKS}
-                <PlaylistTracks {trackSelections}/>
+                <PlaylistTracks {trackSelections} artists={$playlistArtists}/>
             {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
                 <p><i>
                     you can add/remove all tracks from a playlist artist from here

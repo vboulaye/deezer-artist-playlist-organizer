@@ -1,5 +1,6 @@
 <script lang="ts">
     import AudioPlayer from "$lib/AudioPlayer.svelte";
+    import type {DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
     import Td from "$lib/html/Td.svelte";
     import {Paginator, Ratings} from '@skeletonlabs/skeleton';
@@ -15,6 +16,7 @@
 
 
     export let trackSelections: Writable<TrackSelection[]>
+    export let artists: DeezerArtist[] = []
 
     function computeRowClass(trackSelection: TrackSelection): string {
         if (!trackSelection.inPlaylist && trackSelection.selected) {
@@ -24,6 +26,10 @@
             return '!line-through'
         }
         return ""
+    }
+
+    function getArtist(track: DeezerTrack, artists: DeezerArtist[]) {
+        return artists.find(a => a.id === track.artist.id)
     }
 
 
@@ -90,8 +96,8 @@
                     </th>
                     <th class="largeonly">Pos.</th>
                     <th>Title</th>
-                    <th>Album</th>
-                    <th>Artist</th>
+                    <th class="w-1/5">Album</th>
+                    <th class="w-1/5">Artist</th>
                     <th class="largeonly">rank</th>
                     <th class="largeonly w-16">duration</th>
                 </tr>
@@ -128,27 +134,31 @@
                                </a>
                             </TrackSelectionComponent>
                         </Td>
-                        <Td justify="start" >
+                        <Td justify="start">
                            <TrackSelectionComponent
                                    addTitle="add all artist titles to the playlist"
                                    removeTitle="deselect all artist titles from the playlist"
                                    on:add={()=> addArtistTracks(row.artist.id, trackSelections)}
                                    on:remove={()=> removeArtistTracks(row.artist.id, trackSelections)}>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
-                                    <span> {row.artist.name}</span>
+
+                                    <HorizontalSpan>
+                                        <img src={getArtist(row, artists)?.picture_small} alt="artist picture"/>
+                                        <span>{row.artist.name}</span>
+                                    </HorizontalSpan>
                                 </a>
                             </TrackSelectionComponent>
 
                         </Td>
 
                         <Td class="largeonly" title={row.rank}>
-                            <Ratings value={5*row.rank/maxRank} max={5}>
+                            <Ratings value={5*row.rank/maxRank} max={5} regionIcon="!m-0">
                                 <svelte:fragment slot="empty"><IconStarEmpty/></svelte:fragment>
                                 <svelte:fragment slot="half"><IconStarHalf/></svelte:fragment>
                                 <svelte:fragment slot="full"><IconStarFull/></svelte:fragment>
                             </Ratings>
                         </Td>
-                        <Td class="largeonly" >{shortEnglishHumanizer(row.duration * 1000)}
+                        <Td class="largeonly">{shortEnglishHumanizer(row.duration * 1000)}
                             <span class="grow"></span>
                         </Td>
                     </tr>

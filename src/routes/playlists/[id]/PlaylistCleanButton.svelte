@@ -5,7 +5,7 @@
 
 </script>
 
-<button class="btn variant-filled-tertiary" on:click|preventDefault
+<button class=" variant-filled-tertiary" on:click|preventDefault
         {disabled}
         title="remove de-selected new tracks" >
     <ClearPlaylistIcon/>
