@@ -1,6 +1,7 @@
 <script lang="ts">
 
     import {goto, invalidateAll} from "$app/navigation";
+    import {base} from "$app/paths";
     import {page} from "$app/stores";
     import {RedirectCookie, TokenCookie} from "$lib/CookieManager";
 
@@ -9,7 +10,10 @@
         TokenCookie.set(access_token)
         await invalidateAll()
 
-        const redirectPath = RedirectCookie.get() || "/";
+
+        const redirectPath = RedirectCookie.get() || base+"/";
+
+        console.log({redirectPath, base})
         RedirectCookie.remove()
         await goto(redirectPath, {invalidateAll: true})
     }
