@@ -1,27 +1,27 @@
 <script lang="ts">
     import {base} from "$app/paths";
     import {page} from "$app/stores";
+
+
 </script>
 
-<span class="signedInStatus">
-    <span class="nojs-show loaded flex space-x-12 justify-center place-items-center">
+<span class="nojs-show flex space-x-12 justify-center place-items-center">
         {#if $page.data.currentUser}
             <span class="flex space-x-4">
                 {#if $page.data.currentUser?.picture}
-                    <span style="background-image: url('{$page.data.currentUser.picture}')" class="avatar"/>
+                    <span style="background-image: url('{$page.data.currentUser.picture}')" class="avatar largeonly"/>
                 {/if}
                 <div>
                     <small>Signed in as</small><br/>
                     <strong>{$page.data.currentUser?.name}</strong>
                 </div>
-          </span>
+            </span>
             <a href="{base}/auth/signout" class="" data-sveltekit-preload-data="off">Sign out</a>
         {:else}
             <span class="notSignedInText">You are not signed in</span>
             <a href="{base}/auth/signin" class="" data-sveltekit-preload-data="off">Sign in</a>
         {/if}
     </span>
-</span>
 
 <style>
 

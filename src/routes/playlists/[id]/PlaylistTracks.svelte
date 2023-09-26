@@ -95,9 +95,9 @@
                         />
                     </th>
                     <th class="largeonly">Pos.</th>
-                    <th>Title</th>
-                    <th class="w-1/5">Album</th>
-                    <th class="w-1/5">Artist</th>
+                    <th class="">Title</th>
+                    <th class="max-w-xs">Album</th>
+                    <th class="max-w-xs">Artist</th>
                     <th class="largeonly">rank</th>
                     <th class="largeonly w-16">duration</th>
                 </tr>
@@ -116,7 +116,7 @@
                         <Td justify="start">
                             <AudioPlayer src={row.preview} enabled={row.readable}/>
                             <a href={row.link} title="open track in Deezer web interface">
-                                <span>{row.title}</span>
+                                <span class="whitespace-normal">{row.title}</span>
                             </a>
                         </Td>
                         <Td justify="start">
@@ -128,8 +128,8 @@
                                <a href="https://www.deezer.com/album/{row.album.id}"
                                   title="open album in Deezer web interface">
                                     <HorizontalSpan>
-                                        <img src={row.album.cover_small} alt="album cover"/>
-                                        <span>{row.album.title}</span>
+                                        <img class="largeonly" src={row.album.cover_small} alt="album cover"/>
+                                        <span class="whitespace-normal">{row.album.title}</span>
                                     </HorizontalSpan>
                                </a>
                             </TrackSelectionComponent>
@@ -143,8 +143,8 @@
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
 
                                     <HorizontalSpan>
-                                        <img src={getArtist(row, artists)?.picture_small} alt="artist picture"/>
-                                        <span>{row.artist.name}</span>
+                                        <img class="largeonly" src={getArtist(row, artists)?.picture_small} alt="artist"/>
+                                        <span class="whitespace-normal">{row.artist.name}</span>
                                     </HorizontalSpan>
                                 </a>
                             </TrackSelectionComponent>
