@@ -41,19 +41,19 @@
     </svelte:fragment>
 
     <div class="table-container">
-        <table class="table table-hover">
+        <table class="table table-hover ">
             <thead>
+
             <tr>
-                <td colspan="1">
-                </td>
-                <td colspan="5"><input bind:value={search} class="input" title="Input (search)" type="search" placeholder="Search..."/></td>
-            </tr>
-            <tr>
-                <th class="w-1/3">Title</th>
+                <th >Title</th>
                 <th class="largeonly">Created on</th>
                 <th class="largeonly">Public?</th>
-                <th># Tracks</th>
-                <th>duration</th>
+                <th class="mediumonly"># Tracks</th>
+                <th class="largeonly">duration</th>
+            </tr>
+
+            <tr>
+                <td colspan="6"><input bind:value={search} class="input" title="Input (search)" type="search" placeholder="Search..."/></td>
             </tr>
             </thead>
             <tbody>
@@ -69,8 +69,8 @@
                     </td>
                     <td class="items-center largeonly">{playlist.creation_date}</td>
                     <td class="largeonly"><input class="checkbox" type="checkbox" checked={playlist.public} disabled/></td>
-                    <td>{playlist.nb_tracks}</td>
-                    <td>{humanizeDuration(playlist.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
+                    <td class="mediumonly">{playlist.nb_tracks}</td>
+                    <td class="largeonly">{humanizeDuration(playlist.duration * 1000, {units: ["h", "m", "s"], largest: 2,})}</td>
                 </tr>
             {/each}
             </tbody>

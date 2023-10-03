@@ -1,21 +1,45 @@
 <script lang="ts">
     import {base} from '$app/paths'
-    // Finally, your application's global stylesheet (sometimes labeled 'app.css')
-    import '../app.postcss';
     import {page} from "$app/stores";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
 
-    import {AppBar, AppShell, LightSwitch, Toast} from "@skeletonlabs/skeleton";
-    import IconLogo from '~icons/ph/playlist-bold'
+    import {AppBar, initializeStores, LightSwitch, Toast} from "@skeletonlabs/skeleton";
+    import IconPlayList from '~icons/ph/playlist-bold'
+    import IconMusicNotePlus from '~icons/ph/music-notes-plus-bold'
+
+    // Finally, your application's global stylesheet (sometimes labeled 'app.css')
+    import '../app.postcss';
+    import {initToolbarStore} from "./contextKeys";
     import LoadingVeil from "./LoadingVeil.svelte";
 
     import LoginStatus from "./LoginStatus.svelte";
     import PageTransition from "./PageTransition.svelte";
-    import {initializeStores} from '@skeletonlabs/skeleton';
 
     initializeStores();
 
+    const toolbarStore = initToolbarStore([
+        {
+            href: base + "/",
+            title: "Home",
+            icon: IconPlayList,
+            visible: () => !$page.data.currentUser
+        },
+        {
+            href: base + "/playlists",
+            title: "My playlists",
+            icon: IconPlayList,
+            visible: () => $page.data.currentUser
+        },
+        {
+            href: base + "/playlists/NEW",
+            title: "Create new playlist",
+            icon: IconMusicNotePlus,
+            visible: () => $page.data.currentUser
+        },
+    ]);
+
     export let data
+
 
 </script>
 
@@ -26,27 +50,65 @@
     <span></span>
     <span class="">
 
-       <AppBar gridColumns="grid-cols-3" slotLead="place-content-start" slotTrail="place-content-end">
+       <AppBar >
             <svelte:fragment slot="lead">
-                <a href="{base}/">
-                    <IconLogo/>
-                </a>
+<!--                <a href="{base}/">-->
+                <!--                    <IconPlayList/>-->
+                <!--                </a>-->
+
+                <!--               <ul class="navItems">-->
+                <span class="flex gap-x-2">
+                <!--{#if $page.data.currentUser}-->
+                    <!--        <a href="{base}/playlists" title="My playlists"><HorizontalSpan><IconPlayList/><span-->
+                    <!--                class="sr-only md:not-sr-only">My playlists</span> </HorizontalSpan></a>-->
+                    <!--        <a href="{base}/playlists/NEW" data-sveltekit-preload-data="off" title="Create new playlist"><HorizontalSpan><IconMusicNotePlus/><span-->
+                    <!--                class="sr-only md:not-sr-only">Create new Playlist</span></HorizontalSpan></a>-->
+                    <!--    {:else }-->
+                    <!--        <a href="{base}/"><IconPlayList/></a>-->
+                    <!--    {/if}-->
+
+                    {#each $toolbarStore as toolbarItem}
+                        {#if !toolbarItem.visible || toolbarItem.visible()}
+                            {#if toolbarItem.href}
+                                 <a href="{toolbarItem.href}" title={toolbarItem.title} data-sveltekit-preload-data="off">
+                                     <HorizontalSpan>
+                                         <svelte:component this={toolbarItem.icon}/>
+                                         <span class="sr-only md:not-sr-only">{toolbarItem.title}</span>
+                                     </HorizontalSpan>
+                                 </a>
+                            {/if}
+                            {#if toolbarItem.onclick}
+                                 <button on:click|preventDefault="{toolbarItem.onclick}" title={toolbarItem.title}
+                                         class="disabled:italic disabled:opacity-50"
+                                         disabled={toolbarItem.disabled && toolbarItem.disabled()}
+                                 >
+                                     <HorizontalSpan>
+                                         <svelte:component this={toolbarItem.icon}/>
+                                         <span class="sr-only md:not-sr-only">{toolbarItem.title}</span>
+                                     </HorizontalSpan>
+                                 </button>
+                            {/if}
+                        {/if}
+                    {/each}
+                </span>
             </svelte:fragment>
+           <!--{#if $page.params?.id}-->
+           <!--        <a href="{base}/playlists" title="My playlists"><HorizontalSpan><IconPlayList/><span class="sr-only md:not-sr-only">My playlists</span> </HorizontalSpan></a>-->
+           <!--{/if}-->
 
-
-            <nav>
-                <ul class="navItems">
-                    {#if $page.data.currentUser}
-                        <li class="navItem"><a href="{base}/playlists">My Playlists</a></li>
-                        <li class="navItem"><a href="{base}/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>
-                    {:else }
-                        <li class="navItem"><a href="{base}/">Home</a></li>
-                    {/if}
-                </ul>
-            </nav>
+           <!--            <nav>-->
+           <!--                <ul class="navItems">-->
+           <!--                    {#if $page.data.currentUser}-->
+           <!--                        <li class="navItem"><a href="{base}/playlists">My Playlists</a></li>-->
+           <!--                        <li class="navItem"><a href="{base}/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>-->
+           <!--                    {:else }-->
+           <!--&lt;!&ndash;                        <li class="navItem"><a href="{base}/">Home</a></li>&ndash;&gt;-->
+           <!--                    {/if}-->
+           <!--                </ul>-->
+           <!--            </nav>-->
             <svelte:fragment slot="trail">
                 <LoginStatus/>
-                <LightSwitch />
+                <LightSwitch/>
             </svelte:fragment>
     </AppBar>
         <!--    <svelte:fragment slot="sidebarLeft">Sidebar Left</svelte:fragment>-->
@@ -63,17 +125,3 @@
 
 
 </div>
-
-<style>
-
-    .navItems {
-        margin-bottom: 2rem;
-        padding: 0;
-        list-style: none;
-    }
-
-    .navItem {
-        display: inline-block;
-        margin-right: 1rem;
-    }
-</style>

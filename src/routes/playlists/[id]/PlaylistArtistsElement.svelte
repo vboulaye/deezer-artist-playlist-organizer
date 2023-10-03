@@ -19,9 +19,9 @@
     let addHover = false
     let removeHover = false
 
-    $: {
-        console.log({addHover, topArtist})
-    }
+    // $: {
+    //     console.log({addHover, topArtist})
+    // }
 </script>
 
 <li class:variant-ghost-success={addHover}

@@ -6,6 +6,8 @@
 </script>
 
 {#if $updateTracksProgress}
+    <span class="my-6">
     <span>{$updateTracksProgress.message}</span>
     <progress value={$updateTracksProgress.value} max={$updateTracksProgress.max}/>
+    </span>
 {/if}

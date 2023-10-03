@@ -110,7 +110,8 @@
                     >
                         <Td>
                             <input type="checkbox" class="checkbox"
-                                   bind:checked={trackSelection.selected}/>
+                                   bind:checked={trackSelection.selected}
+                                    on:change={()=>trackSelections.update(x=>x)}/>
                         </Td>
                         <Td class="largeonly"><span>{i + 1}</span></Td>
                         <Td justify="start">

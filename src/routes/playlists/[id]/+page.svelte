@@ -1,16 +1,19 @@
 <script lang="ts">
     import type {DeezerArtist} from "$lib/DeezerApiModel";
-    import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
+    import {AppBar, getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
+    import {onDestroy, onMount} from "svelte";
     import {get, writable} from "svelte/store";
+    import ClearPlaylistIcon from '~icons/ph/backspace-bold';
+
+    import IconSave from '~icons/ph/cloud-check-bold'
+    import RelinkTracksIcon from '~icons/ph/link-bold';
+    import {getToolbarStore} from "../../contextKeys";
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
     import {relinkNonReadableTrackSelections} from "./alternativeTrackGetter";
     import ArtistsFinder from "./ArtistsFinder.svelte";
     import PlaylistArtists from "./PlaylistArtists.svelte";
-    import PlaylistCleanButton from "./PlaylistCleanButton.svelte";
     import PlaylistInfo from "./PlaylistInfo.svelte";
-    import PlaylistRelinkButton from "./PlaylistRelinkButton.svelte";
-    import PlaylistSaveButton from "./PlaylistSaveButton.svelte";
     import PlaylistTracks from "./PlaylistTracks.svelte";
     import {savePlaylist} from "./playlistUpdater";
     import ProgressBar from "./ProgressBar.svelte";
@@ -66,6 +69,42 @@
     }
 
     let tabIndex: TabIndex = TabIndex.TRACKS
+
+    const toolbarStore = getToolbarStore();
+
+    //prepare the list of action icons to add to the main toolbar
+    const playlistIcons = [
+        {
+            onclick: () => savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress),
+            title: "Update playlist",
+            icon: IconSave,
+        },
+        {
+            onclick: () => relinkNonReadableTracks(),
+            title: "Fix missing tracks",
+            icon: RelinkTracksIcon,
+            disabled: () => $trackSelections.filter(x => x.selected && !x.track.readable).length === 0
+        },
+        {
+            onclick: () => purgePlaylist(),
+            title: "Clear deselected tracks",
+            icon: ClearPlaylistIcon,
+            disabled: () => $trackSelections.filter(x => !x.selected && !x.inPlaylist).length === 0
+        },
+    ]
+
+    // triggers a toolbar update on selection changes
+    const unsubscribeToolbarUpdate = trackSelections.subscribe(() => toolbarStore.update(toolbar => toolbar));
+
+    onMount(() => {
+        toolbarStore.update(toolbar => [...toolbar, ...playlistIcons,])
+    })
+
+    onDestroy(() => {
+        toolbarStore.update(toolbarIcons => toolbarIcons.filter(toolbarIcon => !playlistIcons.includes(toolbarIcon)))
+        unsubscribeToolbarUpdate()
+    })
+
 </script>
 
 
@@ -73,50 +112,41 @@
 
 
     <svelte:fragment slot="pageHeader">
-
-        <div class="btn-group variant-filled">
-            <PlaylistSaveButton
-                    on:click={()=>savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress)}/>
-
-            <PlaylistRelinkButton on:click={relinkNonReadableTracks}
-                                  disabled={$trackSelections.filter(x=>x.selected && !x.track.readable).length===0}/>
-
-            <PlaylistCleanButton on:click={purgePlaylist}
-                                 disabled={$trackSelections.filter(x=>!x.selected && !x.inPlaylist).length===0}/>
-        </div>
-
-
         <ProgressBar {updateTracksProgress}/>
     </svelte:fragment>
 
-    <TabGroup>
-        <Tab bind:group={tabIndex} name="tabTracks" value={TabIndex.TRACKS}>tracks</Tab>
-        <Tab bind:group={tabIndex} name="tabMain" value={TabIndex.DESCRIPTION}>
-            <!--            <svelte:fragment slot="lead">(icon)</svelte:fragment>-->
-            description
-        </Tab>
-        <Tab bind:group={tabIndex} name="tabPlaylistArtists" value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
-        <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
-        <!-- Tab Panels --->
-        <svelte:fragment slot="panel">
-            {#if tabIndex === TabIndex.DESCRIPTION}
-                <PlaylistInfo playlist={data.playlist}/>
-            {:else if tabIndex === TabIndex.TRACKS}
-                <PlaylistTracks {trackSelections} artists={$playlistArtists}/>
-            {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
-                <p><i>
-                    you can add/remove all tracks from a playlist artist from here
-                </i></p>
-                <PlaylistArtists {playlistArtists} {trackSelections}/>
-            {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
-                <p class="my-4"><i>
-                    you can add all tracks from a new artist from here
-                </i></p>
-                <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
-            {/if}
-        </svelte:fragment>
-    </TabGroup>
-
+    <span class:opacity-50={$updateTracksProgress}>
+        <h3 class="h3">
+            {data.playlist.title}
+        </h3>
+        <TabGroup>
+            <Tab bind:group={tabIndex} name="tabTracks" value={TabIndex.TRACKS}>tracks</Tab>
+            <Tab bind:group={tabIndex} name="tabMain" value={TabIndex.DESCRIPTION}>
+                <!--            <svelte:fragment slot="lead">(icon)</svelte:fragment>-->
+                details
+            </Tab>
+            <Tab bind:group={tabIndex} name="tabPlaylistArtists" value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
+            <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
+            <!-- Tab Panels --->
+            <svelte:fragment slot="panel">
+                {#if tabIndex === TabIndex.DESCRIPTION}
+                    <PlaylistInfo playlist={data.playlist}/>
+                {:else if tabIndex === TabIndex.TRACKS}
+                    <PlaylistTracks {trackSelections} artists={$playlistArtists}/>
+                {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
+                    <p><i>
+                        you can add/remove all tracks from a playlist artist from here
+                    </i></p>
+                    <PlaylistArtists {playlistArtists} {trackSelections}/>
+                {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
+                    <p class="my-4"><i>
+                        you can add all tracks from a new artist from here
+                    </i></p>
+                    <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
+                {/if}
+            </svelte:fragment>
+        </TabGroup>
+    </span>
 
 </PlaylistApplicationShell>
 
