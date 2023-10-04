@@ -17,7 +17,8 @@ const config = {
         }),
         paths: {
             // assets: '/icon-socle-web2',
-            base: dev ? undefined : "/deezer-artist-playlist-organizer",
+            // relocation not needed when github pages are exposed  on a sub domain like https://deeplo.vboof.fr
+            // base: dev ? undefined : "/deezer-artist-playlist-organizer",
         },
         prerender: {
             handleHttpError: ({ path, referrer, message }) => {
