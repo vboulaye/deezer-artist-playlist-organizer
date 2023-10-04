@@ -1,7 +1,10 @@
-# deezer-artist-playlist-organizer
+# DeePlO
 
-a little app to manage the artists playlist in deezer
+A little app to manage the artists playlist in deezer.
 
+You can use it here: https://deeplo.vboof.fr/
+
+(It is a static site exposed as a github pages, there is not backend, it connects directly to the deezer api.)
 
 # development
 
@@ -19,7 +22,7 @@ So I configure the application with:
 - redirect url: https://localhost/auth/callback
 - tos url: https://localhost/tos
 
-then store the application id / secret in variables in `.env` at the root of the project.
+then store the application id  in variables in `.env` at the root of the project.
 see .env.example for all the variables to be defined
 
 
