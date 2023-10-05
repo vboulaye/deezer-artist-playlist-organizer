@@ -152,8 +152,4 @@
 
 <style>
 
-    :global(.h-100vh) {
-        height: 100vh
-    }
-
 </style>

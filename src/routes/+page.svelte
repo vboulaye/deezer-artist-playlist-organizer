@@ -10,7 +10,7 @@
 
 </script>
 {#if !$page.data.currentUser}
-    <div class="h-100vh flex place-content-center items-center">
+    <div class="flex place-content-center items-center">
         <span class=" grid grid-cols-1 justify-items-center gap-y-4  ">
             <h1 class="h1">Welcome to the Deezer Playlist Organizer!</h1>
             <p class="h4">Please sign-in using your Deezer Account in order to view/edit your playlists.</p>
