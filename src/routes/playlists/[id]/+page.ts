@@ -1,10 +1,8 @@
-import {page} from "$app/stores";
-import type {DeezerAlbum, DeezerArtist, DeezerPlaylistDetails, DeezerTrack} from "$lib/DeezerApiModel";
-import {getDeezerArtist, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
+import type {DeezerArtist, DeezerPlaylistDetails, DeezerTrack} from "$lib/DeezerApiModel";
+import {getDeezerArtist} from "$lib/DeezerApiQuery";
 import {callDeezer} from "$lib/DeezerCall";
 import {getRemainingPages} from "$lib/PaginationUtils";
-import type {PaginatedResult} from "$lib/PaginationUtils";
-import {error, redirect} from "@sveltejs/kit";
+import {redirect} from "@sveltejs/kit";
 import type {PageLoadEvent} from "./$types";
 
 
@@ -33,6 +31,13 @@ export async function load({params}: PageLoadEvent) {
     const playlist = await callDeezer<DeezerPlaylistDetails>({
         apiPath: `/playlist/${playlistId}`,
     });
+
+
+    if (playlist.nb_tracks > 400) {
+        const lastTracks = await getRemainingPages<DeezerTrack>({apiPath: `/playlist/${playlistId}/tracks`, limit: 100, index: playlist.tracks.data.length});
+        playlist.tracks.data = [...playlist.tracks.data, ...lastTracks.data]
+    }
+
     const artistsById = playlist.tracks.data
         .reduce((accumulator, track) => {
             if (!accumulator[track.artist.id]) {
@@ -45,12 +50,6 @@ export async function load({params}: PageLoadEvent) {
     const playlistTopArtists = Object.values(artistsById)
         // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
         .sort((a, b) => b.count - a.count)
-
-
-    if (playlist.nb_tracks > 400) {
-        const lastTracks = await getRemainingPages<DeezerTrack>({apiPath: `/playlist/${playlistId}/tracks`, limit: 100, index: playlist.tracks.data.length});
-        playlist.tracks.data = [...playlist.tracks.data, ...lastTracks.data]
-    }
 
     const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
 

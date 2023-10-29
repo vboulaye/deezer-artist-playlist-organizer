@@ -1,4 +1,4 @@
-import type {DeezerAlbum, DeezerTrack} from "$lib/DeezerApiModel";
+import type {DeezerAlbum, DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
 import {getAlbumTracks, getDeezerArtistDiscography} from "$lib/DeezerApiQuery";
 import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 import type {Writable} from "svelte/store";
@@ -21,7 +21,8 @@ export function removeArtistTracks(artistId: number, trackSelections: Writable<T
     })
 }
 
-export async function addArtistTracks(artistId: number, trackSelections: Writable<TrackSelection[]>) {
+export async function addArtistTracks(artist: DeezerArtist, trackSelections: Writable<TrackSelection[]>, toastStore:ToastStore) {
+    const artistId=artist.id
     const albums = await getDeezerArtistDiscography(artistId);
 
     trackSelections.update(trackSelectionsList => {
@@ -59,8 +60,16 @@ export async function addArtistTracks(artistId: number, trackSelections: Writabl
             return pos1 - pos2
         })
 
+
+        toastStore.trigger({
+            message: `Added ${allTracks.length} tracks from ${artist.name}`,
+            timeout: 3000
+        });
+
         return trackSelectionsList
     })
+
+
 }
 
 export function removeAlbumTracks(albumId: number, trackSelections: Writable<TrackSelection[]>) {

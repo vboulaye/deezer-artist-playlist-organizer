@@ -10,12 +10,13 @@
     import PlaylistArtistsElement from "./PlaylistArtistsElement.svelte";
 
     import type {TrackSelection} from "./trackSelection";
+    import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 
 
     export let playlistArtists: Writable<DeezerArtist[]>
 
     export let trackSelections: Writable<TrackSelection[]>
-
+    export let toastStore:ToastStore
     export const playlistArtistsSort: PlaylistArtistsSort = {
         ascending: false,
         orderBy: "trackCount"
@@ -60,7 +61,7 @@
            </span>
     <ul class="list">
         {#each $playlistArtists as topArtist}
-            <PlaylistArtistsElement {topArtist} {trackSelections}/>
+            <PlaylistArtistsElement {topArtist} {trackSelections} {toastStore}/>
         {/each}
     </ul>
 {/if}

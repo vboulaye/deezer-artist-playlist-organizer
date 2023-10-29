@@ -13,10 +13,12 @@
     import type {TrackSelection} from "./trackSelection";
     import {addAlbumTracks, addArtistTracks, removeAlbumTracks, removeArtistTracks} from "./trackSelection";
     import TrackSelectionComponent from "./TrackSelectionComponent.svelte";
+    import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 
 
     export let trackSelections: Writable<TrackSelection[]>
     export let artists: DeezerArtist[] = []
+    export let toastStore:ToastStore
 
     function computeRowClass(trackSelection: TrackSelection): string {
         if (!trackSelection.inPlaylist && trackSelection.selected) {
@@ -139,7 +141,7 @@
                            <TrackSelectionComponent
                                    addTitle="add all artist titles to the playlist"
                                    removeTitle="deselect all artist titles from the playlist"
-                                   on:add={()=> addArtistTracks(row.artist.id, trackSelections)}
+                                   on:add={()=> addArtistTracks(row.artist, trackSelections,toastStore)}
                                    on:remove={()=> removeArtistTracks(row.artist.id, trackSelections)}>
                                 <a href={row.artist.link} title="open artist in Deezer web interface">
 

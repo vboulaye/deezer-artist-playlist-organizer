@@ -2,6 +2,10 @@
 	"name": "DeePlO",
 	"version": "0.0.1",
 	"private": true,
+	"engines": {
+		"node": "18",
+		"npm": "9"
+	},
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
 		"dev": "DEBUG=deezer-playlist* vite dev --host",

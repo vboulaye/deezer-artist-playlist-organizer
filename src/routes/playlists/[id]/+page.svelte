@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {DeezerArtist} from "$lib/DeezerApiModel";
-    import {AppBar, getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
+    import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {onDestroy, onMount} from "svelte";
     import {get, writable} from "svelte/store";
     import ClearPlaylistIcon from '~icons/ph/backspace-bold';
@@ -39,6 +39,7 @@
         trackSelections.set(newTrackSelections)
     }
 
+
     async function relinkNonReadableTracks() {
         try {
             const trackSelectionsList: TrackSelection[] = get(trackSelections);
@@ -58,7 +59,14 @@
         if ($trackSelections.length === 0) {
             data.playlist.title = artist.name + " - Full Discography"
         }
-        addArtistTracks(artist.id, trackSelections)
+        playlistArtists.update(artists => {
+            const existingArtistIndex = artists.findIndex(a => a.id === artist.id);
+            if (existingArtistIndex < 0) {
+                artists.push(artist)
+            }
+            return artists
+        })
+        addArtistTracks(artist, trackSelections, toastStore)
     }
 
     enum TabIndex {
@@ -98,6 +106,9 @@
 
     onMount(() => {
         toolbarStore.update(toolbar => [...toolbar, ...playlistIcons,])
+        if (!data.playlist.tracks.data.length) {
+            tabIndex = TabIndex.SEARCH_ARTISTS
+        }
     })
 
     onDestroy(() => {
@@ -116,28 +127,29 @@
     </svelte:fragment>
 
     <span class:opacity-50={$updateTracksProgress}>
-        <h3 class="h3">
+        <span class="h3">
             {data.playlist.title}
-        </h3>
+        </span>
         <TabGroup>
             <Tab bind:group={tabIndex} name="tabTracks" value={TabIndex.TRACKS}>tracks</Tab>
             <Tab bind:group={tabIndex} name="tabMain" value={TabIndex.DESCRIPTION}>
                 <!--            <svelte:fragment slot="lead">(icon)</svelte:fragment>-->
                 details
             </Tab>
-            <Tab bind:group={tabIndex} name="tabPlaylistArtists" value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
+            <Tab bind:group={tabIndex} name="tabPlaylistArtists"
+                 value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
             <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
             <!-- Tab Panels --->
             <svelte:fragment slot="panel">
                 {#if tabIndex === TabIndex.DESCRIPTION}
                     <PlaylistInfo playlist={data.playlist}/>
                 {:else if tabIndex === TabIndex.TRACKS}
-                    <PlaylistTracks {trackSelections} artists={$playlistArtists}/>
+                    <PlaylistTracks {trackSelections} artists={$playlistArtists} {toastStore} />
                 {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
                     <p><i>
                         you can add/remove all tracks from a playlist artist from here
                     </i></p>
-                    <PlaylistArtists {playlistArtists} {trackSelections}/>
+                    <PlaylistArtists {playlistArtists} {trackSelections} {toastStore}/>
                 {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
                     <p class="my-4"><i>
                         you can add all tracks from a new artist from here

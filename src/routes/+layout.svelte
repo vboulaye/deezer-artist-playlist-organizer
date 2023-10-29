@@ -14,6 +14,7 @@
 
     import LoginStatus from "./LoginStatus.svelte";
     import PageTransition from "./PageTransition.svelte";
+    import type {Page} from "@sveltejs/kit";
 
     initializeStores();
 
@@ -22,19 +23,19 @@
             href: base + "/",
             title: "Home",
             icon: IconPlayList,
-            visible: () => !$page.data.currentUser
+            visible: (page:Page) => !page.data.currentUser
         },
         {
             href: base + "/playlists",
             title: "My playlists",
             icon: IconPlayList,
-            visible: () => $page.data.currentUser
+            visible: (page:Page) => page.data.currentUser
         },
         {
             href: base + "/playlists/NEW",
             title: "Create new playlist",
             icon: IconMusicNotePlus,
-            visible: () => $page.data.currentUser
+            visible: (page:Page) => page.data.currentUser
         },
     ]);
 
@@ -42,11 +43,14 @@
 
 
 </script>
-<a href="https://github.com/vboulaye/deezer-artist-playlist-organizer" class="xtralargeonly absolute right-0"><img decoding="async" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_darkblue_121621.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" loading="lazy" data-recalc-dims="1"></a>
 
 <LoadingVeil/>
 <Toast/>
-
+{#if !$page.data.currentUser}
+    <a href="https://github.com/vboulaye/deezer-artist-playlist-organizer" class="xtralargeonly absolute left-0 top-0">
+        <img decoding="async" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_left_darkblue_121621.png?resize=149%2C149" alt="Fork me on GitHub" loading="lazy" data-recalc-dims="1">
+    </a>
+{/if}
 <div class="grid grid-cols-[1fr_minmax(400px,1200px)_1fr]">
     <span></span>
     <span class="">
@@ -69,7 +73,7 @@
                     <!--    {/if}-->
 
                     {#each $toolbarStore as toolbarItem}
-                        {#if !toolbarItem.visible || toolbarItem.visible()}
+                        {#if !toolbarItem.visible || toolbarItem.visible($page)}
                             {#if toolbarItem.href}
                                  <a href="{toolbarItem.href}" title={toolbarItem.title} data-sveltekit-preload-data="off">
                                      <HorizontalSpan>
@@ -81,7 +85,7 @@
                             {#if toolbarItem.onclick}
                                  <button on:click|preventDefault="{toolbarItem.onclick}" title={toolbarItem.title}
                                          class="disabled:italic disabled:opacity-50"
-                                         disabled={toolbarItem.disabled && toolbarItem.disabled()}
+                                         disabled={toolbarItem.disabled && toolbarItem.disabled($page)}
                                  >
                                      <HorizontalSpan>
                                          <svelte:component this={toolbarItem.icon}/>

@@ -1,6 +1,7 @@
 import {getContext, setContext} from "svelte";
 import {writable} from "svelte/store";
 import type {Writable} from "svelte/store";
+import type {Page} from "@sveltejs/kit";
 
 export const CONTEXT_KEYS = {
     toolbar: Symbol()
@@ -10,8 +11,8 @@ export const CONTEXT_KEYS = {
 export interface ToolbarLink {
     href?: string
     onclick?: () => void;
-    disabled?: () => boolean;
-    visible?: () => boolean;
+    disabled?: (page:Page) => boolean;
+    visible?: (page:Page) => boolean;
     title?: string;
     icon?: any;
 }

@@ -10,7 +10,9 @@
     RedirectCookie.remove()
 
     if (browser) {
-        goto(base+"/", {invalidateAll: true})
+        setTimeout(() => {
+            goto(base + "/", {invalidateAll: true})
+        }, 1)
     }
 
 </script>

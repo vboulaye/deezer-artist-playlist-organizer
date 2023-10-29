@@ -2,7 +2,6 @@
     import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {callDeezer} from "$lib/DeezerCall";
     import DeezerAutocomplete from "$lib/html/DeezerAutocomplete.svelte";
-    import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from "@skeletonlabs/skeleton";
     import {createEventDispatcher} from "svelte";
