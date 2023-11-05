@@ -25,8 +25,10 @@ async function getPlaylistId(playlistId: string): Promise<string> {
     return playlistId;
 }
 
-export async function load({params}: PageLoadEvent) {
-    const playlistId = await getPlaylistId(params.id);
+export async function load({url}: PageLoadEvent) {
+
+    // we use a search param rather than a pat param because we deploy a version  client side only
+    const playlistId = url.searchParams.get("id")
 
     const playlist = await callDeezer<DeezerPlaylistDetails>({
         apiPath: `/playlist/${playlistId}`,

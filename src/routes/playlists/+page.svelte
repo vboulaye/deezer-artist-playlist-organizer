@@ -60,7 +60,7 @@
             {#each paginatedSource as playlist}
                 <tr>
                     <td>
-                        <a href="{playlist.id}" data-sveltekit-preload-data="off">
+                        <a href="edit?id={playlist.id}" data-sveltekit-preload-data="off">
                             <div class="flex items-center">
                                 <img src={playlist.picture_small} alt="playlist cover" aria-describedby="{playlist.id}_title" class="deezer_img_small"/>
                                 <strong id="{playlist.id}_title" class="m-2">{playlist.title}</strong>
