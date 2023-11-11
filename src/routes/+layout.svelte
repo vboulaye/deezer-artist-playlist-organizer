@@ -32,7 +32,7 @@
             visible: (page:Page) => page.data.currentUser
         },
         {
-            href: base + "/playlists/NEW",
+            href: base + "/playlists/edit?id=NEW",
             title: "Create new playlist",
             icon: IconMusicNotePlus,
             visible: (page:Page) => page.data.currentUser

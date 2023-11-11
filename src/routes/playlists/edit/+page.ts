@@ -20,7 +20,7 @@ async function getPlaylistId(playlistId: string): Promise<string> {
                 public: true
             }
         });
-        throw redirect(302, "./" + newPlaylist.id)
+        throw redirect(302, "?id=" + newPlaylist.id)
     }
     return playlistId;
 }
@@ -28,7 +28,7 @@ async function getPlaylistId(playlistId: string): Promise<string> {
 export async function load({url}: PageLoadEvent) {
 
     // we use a search param rather than a pat param because we deploy a version  client side only
-    const playlistId = url.searchParams.get("id")
+    const playlistId = await getPlaylistId(url.searchParams.get("id")||"")
 
     const playlist = await callDeezer<DeezerPlaylistDetails>({
         apiPath: `/playlist/${playlistId}`,
