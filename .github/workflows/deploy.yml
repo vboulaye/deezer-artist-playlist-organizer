@@ -45,6 +45,9 @@ jobs:
         env:
           PUBLIC_DEEZER_ID: ${{ secrets.PUBLIC_DEEZER_ID }}
           PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN }}
+          PUBLIC_DEEZER_AUTHORIZATION_URL: "https://connect.deezer.com/oauth/auth.php",
+          PUBLIC_DEEZER_TOKEN_URL: "https://connect.deezer.com/oauth/access_token.php",
+          PUBLIC_DEEZER_API_URL: "https://api.deezer.com",
         run: |
           pnpm install
           npm run build
