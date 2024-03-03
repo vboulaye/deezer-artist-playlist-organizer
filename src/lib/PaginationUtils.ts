@@ -29,7 +29,7 @@ export interface PaginatedResult<T> {
 export function appendIndexToPaginationResults<T>(result: PaginatedResult<T>, startIndex: number): PaginatedResult<T> {
     result.startIndex = startIndex
     result.endIndex = startIndex + result.data.length
-    return result as PaginatedResult<T>
+    return result
 }
 
 

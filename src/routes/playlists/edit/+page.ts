@@ -63,8 +63,8 @@ export async function load({url}: PageLoadEvent) {
 
 
     return {
-        playlist: playlist,
-        topArtists: topArtists,
+        playlist: await playlist,
+        topArtists: await topArtists,
     }
 
 }

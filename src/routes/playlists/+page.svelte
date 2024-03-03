@@ -1,6 +1,4 @@
 <script lang="ts">
-    import {base} from "$app/paths";
-    import {extractPaginationIndex} from "$lib/PaginationUtils";
     import {Paginator} from "@skeletonlabs/skeleton";
     import type {PageData} from "./$types";
     import humanizeDuration from "humanize-duration";
@@ -17,20 +15,20 @@
         amounts: [5, 10, 20, 50, 100],
     };
 
-    $: allPlaylists = data.playlists.data
+    $: allPlaylists = data?.playlists?.data
 
     $: {
-        tracksPage.size = allPlaylists.length
+        tracksPage.size = allPlaylists?.length
     }
 
     let search = ""
 
-    $: paginatedSource = allPlaylists
+    $: paginatedSource = allPlaylists ? allPlaylists
         .filter(x => !search || JSON.stringify(x).toLowerCase().includes(search.toLowerCase()))
         .slice(
             tracksPage.page * tracksPage.limit,             // start
             tracksPage.page * tracksPage.limit + tracksPage.limit // end
-        );
+        ) : [];
 
 </script>
 
