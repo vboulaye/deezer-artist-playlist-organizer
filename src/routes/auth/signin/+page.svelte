@@ -2,15 +2,15 @@
 
     import {browser} from "$app/environment";
     import {page} from "$app/stores";
-    import {env} from "$env/dynamic/public";
+    import {PUBLIC_DEEZER_ID,PUBLIC_ORIGIN} from "$env/static/public";
     import {RedirectCookie, TokenCookie} from "$lib/CookieManager";
     import {DeezerConfig} from "$lib/DeezerConfig";
 
     TokenCookie.remove()
 
     const deezerAuthorizationUrl = DeezerConfig.AUTHORIZATION_URL
-    const deezerApplicationId = env.PUBLIC_DEEZER_ID
-    const redirectUrl = `${env.PUBLIC_ORIGIN}/auth/callback`;
+    const deezerApplicationId = PUBLIC_DEEZER_ID
+    const redirectUrl = `${PUBLIC_ORIGIN}/auth/callback`;
     const permissions = [
         "basic_access",
         "email",

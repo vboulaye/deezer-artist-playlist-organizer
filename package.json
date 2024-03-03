@@ -47,7 +47,7 @@
 		"js-cookie": "^3.0.5",
 		"memory-cache": "^0.2.0",
 		"postcss": "^8.4.35",
-		"postcss-load-config": "^4.0.1",
+		"postcss-load-config": "^5.0.3",
 		"prettier": "^3.2.5",
 		"prettier-plugin-svelte": "^3.2.2",
 		"svelte": "4.2.12",
