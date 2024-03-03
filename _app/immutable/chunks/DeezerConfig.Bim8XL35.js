@@ -1,0 +1,1 @@
+const t="https://connect.deezer.com/oauth/access_token.php",e="https://connect.deezer.com/oauth/auth.php",s="627084",_="https://vboulaye.github.io/deezer-artist-playlist-organizer",o="https://api.deezer.com",c={AUTHORIZATION_URL:e,TOKEN_URL:t,API_URL:o};export{c as D,s as P,_ as a};

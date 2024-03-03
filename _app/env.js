@@ -1,0 +1,1 @@
+export const env={"PUBLIC_DEEZER_TOKEN_URL":"https://connect.deezer.com/oauth/access_token.php","PUBLIC_DEEZER_AUTHORIZATION_URL":"https://connect.deezer.com/oauth/auth.php","PUBLIC_DEEZER_ID":"627084","PUBLIC_ORIGIN":"https://vboulaye.github.io/deezer-artist-playlist-organizer","PUBLIC_DEEZER_API_URL":"https://api.deezer.com"}
