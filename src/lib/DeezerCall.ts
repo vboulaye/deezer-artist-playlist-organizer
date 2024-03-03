@@ -16,7 +16,7 @@ async function fetchDeezer(url: URL) {
             timeout: 10000,
         })
         if (!response.ok) {
-            throw error(500, "error in jsonp call " + url.pathname)
+            error(500, "error in jsonp call " + url.pathname);
         }
         return response;
     } else {
@@ -37,7 +37,7 @@ export async function callDeezer<T>(req: {
     const url = new URL(req.apiPath, DeezerConfig.API_URL);
     const accessToken = TokenCookie.get()
     if (!accessToken) {
-        throw error(500, "no accessToken in cookies")
+        error(500, "no accessToken in cookies");
     }
     url.searchParams.set("access_token", accessToken)
     if (req.searchParams) {
@@ -51,7 +51,7 @@ export async function callDeezer<T>(req: {
     const responseData = await response.json();
     LOGGER(`call response`, responseData)
     if (responseData.error) {
-        throw error(500, "error in deezer call " + url.pathname + ": " + JSON.stringify(responseData.error))
+        error(500, "error in deezer call " + url.pathname + ": " + JSON.stringify(responseData.error));
     }
     return responseData
 }
