@@ -7,7 +7,7 @@
 
     import IconSave from '~icons/ph/cloud-check-bold'
     import RelinkTracksIcon from '~icons/ph/link-bold';
-    import {getToolbarStore} from "../../contextKeys";
+    import {getToolbarStore, type ToolbarLink} from "../../contextKeys";
     import PlaylistApplicationShell from "../PlaylistApplicationShell.svelte";
     import type {PageData} from "./$types";
     import {relinkNonReadableTrackSelections} from "./alternativeTrackGetter";
@@ -69,19 +69,19 @@
         addArtistTracks(artist, trackSelections, toastStore)
     }
 
-    enum TabIndex {
-        DESCRIPTION,
-        TRACKS,
-        PLAYLIST_ARTISTS,
-        SEARCH_ARTISTS,
+    const TabIndex = {
+        DESCRIPTION:0,
+        TRACKS:1,
+        PLAYLIST_ARTISTS:2,
+        SEARCH_ARTISTS:3,
     }
 
-    let tabIndex: TabIndex = TabIndex.TRACKS
+    let tabIndex = TabIndex.TRACKS
 
     const toolbarStore = getToolbarStore();
 
     //prepare the list of action icons to add to the main toolbar
-    const playlistIcons = [
+    const playlistIcons:ToolbarLink[] = [
         {
             onclick: () => savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress),
             title: "Update playlist",
