@@ -13,14 +13,18 @@
     import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 
 
-    export let playlistArtists: Writable<DeezerArtist[]>
 
-    export let trackSelections: Writable<TrackSelection[]>
-    export let toastStore:ToastStore
-    export const playlistArtistsSort: PlaylistArtistsSort = {
+    interface Props {
+        playlistArtists: Writable<DeezerArtist[]>;
+        trackSelections: Writable<TrackSelection[]>;
+        toastStore: ToastStore;
+    }
+
+    let { playlistArtists, trackSelections, toastStore }: Props = $props();
+    export const playlistArtistsSort: PlaylistArtistsSort = $state({
         ascending: false,
         orderBy: "trackCount"
-    }
+    })
 
     function sortArtists(newSort: Partial<PlaylistArtistsSort>) {
         if (newSort.ascending !== undefined) {
@@ -40,20 +44,20 @@
             <HorizontalSpan><h4>Playlists Artists</h4></HorizontalSpan>
             <HorizontalSpan>
                 {#if playlistArtistsSort.orderBy === "trackCount"}
-                    <button on:click={()=> sortArtists({orderBy:"alphabetical"})}>
+                    <button onclick={()=> sortArtists({orderBy:"alphabetical"})}>
                         # tracks
                     </button>
                   {:else if playlistArtistsSort.orderBy === "alphabetical" }
-                    <button on:click={()=> sortArtists({orderBy:"trackCount"})}>
+                    <button onclick={()=> sortArtists({orderBy:"trackCount"})}>
                         alphabetical
                     </button>
                 {/if}
                 {#if playlistArtistsSort.ascending}
-                    <button on:click={()=> sortArtists({ascending:false})}>
+                    <button onclick={()=> sortArtists({ascending:false})}>
                         <SortAscendingIcon/>
                     </button>
                 {:else}
-                    <button on:click={()=> sortArtists({ascending:true})}>
+                    <button onclick={()=> sortArtists({ascending:true})}>
                         <SortDescendingIcon/>
                     </button>
                 {/if}

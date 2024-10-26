@@ -6,28 +6,33 @@
     import {createEventDispatcher} from 'svelte';
 
     const dispatch = createEventDispatcher();
-    export let addTitle = "add all album titles to the playlist"
-    export let removeTitle = "deselect all album titles from the playlist"
+   interface Props {
+      addTitle?: string;
+      removeTitle?: string;
+      children?: import('svelte').Snippet;
+   }
 
-    let mode=""
+   let { addTitle = "add all album titles to the playlist", removeTitle = "deselect all album titles from the playlist", children }: Props = $props();
+
+    let mode=$state("")
 </script>
 
 <span class="flex flex-row justify-between w-full items-center py-1 gap-x-2 {mode}" >
-   <slot/>
+   {@render children?.()}
    <span class="btn-group-vertical btn btn-sm gap-y-1">
         <button class="!p-0 "
                 title={addTitle}
-                on:click={()=> dispatch("add")}
-                on:pointerenter={()=>mode="variant-ghost-success"}
-                on:pointerleave={()=>mode=""}
+                onclick={()=> dispatch("add")}
+                onpointerenter={()=>mode="variant-ghost-success"}
+                onpointerleave={()=>mode=""}
         >
             <AddIcon/>
         </button>
         <button class="!p-0"
                 title={removeTitle}
-                on:click={()=> dispatch("remove")}
-                on:pointerenter={()=>mode="variant-ghost-error"}
-                on:pointerleave={()=>mode=""}>
+                onclick={()=> dispatch("remove")}
+                onpointerenter={()=>mode="variant-ghost-error"}
+                onpointerleave={()=>mode=""}>
             <RemoveIcon/>
         </button>
     </span>

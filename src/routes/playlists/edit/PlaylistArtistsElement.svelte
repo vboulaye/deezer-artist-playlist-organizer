@@ -11,15 +11,19 @@
     import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 
 
-    export let topArtist: DeezerArtist
 
-    export let trackSelections: Writable<TrackSelection[]>
-    export let toastStore:ToastStore
+    interface Props {
+        topArtist: DeezerArtist;
+        trackSelections: Writable<TrackSelection[]>;
+        toastStore: ToastStore;
+    }
 
-    $: trackCount = getTrackCount(topArtist.id, $trackSelections)
+    let { topArtist, trackSelections, toastStore }: Props = $props();
 
-    let addHover = false
-    let removeHover = false
+    let trackCount = $derived(getTrackCount(topArtist.id, $trackSelections))
+
+    let addHover = $state(false)
+    let removeHover = $state(false)
 
     // $: {
     //     console.log({addHover, topArtist})
@@ -44,17 +48,17 @@
         <div class="btn-group-vertical btn btn-sm gap-y-1">
             <button class="!p-0"
                     title="add all artist titles to the playlist"
-                    on:mouseenter={()=>addHover=true}
-                    on:mouseleave={()=>addHover=false}
-                    on:click={()=> addArtistTracks(topArtist, trackSelections,toastStore)}>
+                    onmouseenter={()=>addHover=true}
+                    onmouseleave={()=>addHover=false}
+                    onclick={()=> addArtistTracks(topArtist, trackSelections,toastStore)}>
                 <AddIcon/>
             </button>
             <button class="!p-0"
                     title="deselect all artist titles from the playlist"
                     class:text-gray-500={trackCount===0}
-                    on:mouseenter={()=>removeHover=true}
-                    on:mouseleave={()=>removeHover=false}
-                    on:click={()=> removeArtistTracks(topArtist.id, trackSelections)}>
+                    onmouseenter={()=>removeHover=true}
+                    onmouseleave={()=>removeHover=false}
+                    onclick={()=> removeArtistTracks(topArtist.id, trackSelections)}>
                 <RemoveIcon/>
             </button>
         </div>

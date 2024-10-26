@@ -1,42 +1,52 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import {Paginator} from "@skeletonlabs/skeleton";
     import type {PageData} from "./$types";
     import humanizeDuration from "humanize-duration";
     import PlaylistApplicationShell from "./PlaylistApplicationShell.svelte";
 
-    export let data: PageData
+    interface Props {
+        data: PageData;
+    }
 
-    let debug = false
+    let { data }: Props = $props();
 
-    let tracksPage = {
+    let debug = $state(false)
+
+    let tracksPage = $state({
         page: 0,
         limit: 5,
         size: 10,
         amounts: [5, 10, 20, 50, 100],
-    };
+    });
 
-    $: allPlaylists = data?.playlists?.data
+    let allPlaylists = $derived(data?.playlists?.data)
 
-    $: {
+    run(() => {
         tracksPage.size = allPlaylists?.length
-    }
+    });
 
-    let search = ""
+    let search = $state("")
 
-    $: paginatedSource = allPlaylists ? allPlaylists
+    let paginatedSource = $derived(allPlaylists ? allPlaylists
         .filter(x => !search || JSON.stringify(x).toLowerCase().includes(search.toLowerCase()))
         .slice(
             tracksPage.page * tracksPage.limit,             // start
             tracksPage.page * tracksPage.limit + tracksPage.limit // end
-        ) : [];
+        ) : []);
 
 </script>
 
 <PlaylistApplicationShell>
-    <svelte:fragment slot="sidebarLeft">
-    </svelte:fragment>
-    <svelte:fragment slot="sidebarRight">
-    </svelte:fragment>
+    {#snippet sidebarLeft()}
+    
+        
+    {/snippet}
+    {#snippet sidebarRight()}
+    
+        
+    {/snippet}
 
     <div class="table-container">
         <table class="table table-hover ">
@@ -80,7 +90,7 @@
         />
     </div>
 
-    <a href="#showDebug" on:click={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
+    <a href="#showDebug" onclick={()=>debug=!debug}>{debug ? 'hide debug' : 'show debug'}</a>
     <pre id="showDebug">
         {#if debug}
             { JSON.stringify({pageData: data.playlists}, null, 2)}

@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import AudioPlayer from "$lib/AudioPlayer.svelte";
     import type {DeezerArtist, DeezerTrack} from "$lib/DeezerApiModel";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
@@ -16,9 +18,13 @@
     import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
 
 
-    export let trackSelections: Writable<TrackSelection[]>
-    export let artists: DeezerArtist[] = []
-    export let toastStore:ToastStore
+    interface Props {
+        trackSelections: Writable<TrackSelection[]>;
+        artists?: DeezerArtist[];
+        toastStore: ToastStore;
+    }
+
+    let { trackSelections, artists = [], toastStore }: Props = $props();
 
     function computeRowClass(trackSelection: TrackSelection): string {
         if (!trackSelection.inPlaylist && trackSelection.selected) {
@@ -35,25 +41,25 @@
     }
 
 
-    let tracksPage = {
+    let tracksPage = $state({
         page: 0,
         limit: 10,
         size: 10,
         amounts: [10, 20, 50, 100],
-    };
+    });
 
-    $: {
+    run(() => {
         tracksPage.size = $trackSelections.length
-    }
-    let search = ""
-    $: paginatedSource = $trackSelections
+    });
+    let search = $state("")
+    let paginatedSource = $derived($trackSelections
         .filter(x => !search || JSON.stringify(x.track).toLowerCase().includes(search.toLowerCase()))
         .slice(
             tracksPage.page * tracksPage.limit,             // start
             tracksPage.page * tracksPage.limit + tracksPage.limit // end
-        );
+        ));
 
-    $: maxRank = $trackSelections.reduce((pre, cur) => Math.max(pre, cur.track.rank), 0)
+    let maxRank = $derived($trackSelections.reduce((pre, cur) => Math.max(pre, cur.track.rank), 0))
 
     const shortEnglishHumanizer = humanizeDuration.humanizer({
         language: "shortEn",
@@ -93,7 +99,7 @@
                         <input type="checkbox" class="checkbox"
                                checked={paginatedSource.filter(x=>x.selected).length===paginatedSource.length && paginatedSource.length>0}
                                indeterminate={paginatedSource.filter(x=>x.selected).length!==paginatedSource.length && paginatedSource.filter(x=>x.selected).length>0}
-                               on:change={(e)=> {paginatedSource.forEach(x=>x.selected=e.target?.checked); trackSelections.update(x=>x)}}
+                               onchange={(e)=> {paginatedSource.forEach(x=>x.selected=e.target?.checked); trackSelections.update(x=>x)}}
                         />
                     </th>
                     <th class="largeonly">Pos.</th>
@@ -113,7 +119,7 @@
                         <Td>
                             <input type="checkbox" class="checkbox"
                                    bind:checked={trackSelection.selected}
-                                    on:change={()=>trackSelections.update(x=>x)}/>
+                                    onchange={()=>trackSelections.update(x=>x)}/>
                         </Td>
                         <Td class="largeonly"><span>{i + 1}</span></Td>
                         <Td justify="start">
@@ -156,9 +162,15 @@
 
                         <Td class="largeonly" title={row.rank}>
                             <Ratings value={5*row.rank/maxRank} max={5} regionIcon="!m-0">
-                                <svelte:fragment slot="empty"><IconStarEmpty/></svelte:fragment>
-                                <svelte:fragment slot="half"><IconStarHalf/></svelte:fragment>
-                                <svelte:fragment slot="full"><IconStarFull/></svelte:fragment>
+                                {#snippet empty()}
+                                                        <IconStarEmpty/>
+                                                    {/snippet}
+                                {#snippet half()}
+                                                        <IconStarHalf/>
+                                                    {/snippet}
+                                {#snippet full()}
+                                                        <IconStarFull/>
+                                                    {/snippet}
                             </Ratings>
                         </Td>
                         <Td class="largeonly">{shortEnglishHumanizer(row.duration * 1000)}

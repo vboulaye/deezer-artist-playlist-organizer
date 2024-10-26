@@ -1,15 +1,25 @@
 <script lang="ts">
-    export let justify: "center" | "start" | "end" = "center"
-    export let title = ""
 
-    let clazz = ""
+    interface Props {
+        justify?: "center" | "start" | "end";
+        title?: string;
+        class?: string;
+        children?: import('svelte').Snippet;
+    }
+
+    let {
+        justify = "center",
+        title = "",
+        class: clazz = "",
+        children
+    }: Props = $props();
     // creates a `class` property, even
     // though it is a reserved word
-    export {clazz as class};
+    
 </script>
 
 <td style="vertical-align:middle" {title} class={clazz}>
     <div class="flex items-center justify-{justify} gap-x-2 h-full">
-        <slot/>
+        {@render children?.()}
     </div>
 </td>

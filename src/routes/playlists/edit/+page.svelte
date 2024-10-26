@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {onDestroy, onMount} from "svelte";
@@ -25,19 +27,23 @@
 
     const updateTracksProgress = writable<UpdateTracksProgress | undefined>(undefined)
 
-    export let data: PageData
-
-    const playlistArtists = writable<DeezerArtist[]>([])
-    $: {
-        playlistArtists.set(data.topArtists)
+    interface Props {
+        data: PageData;
     }
 
+    let { data = $bindable() }: Props = $props();
+
+    const playlistArtists = writable<DeezerArtist[]>([])
+    run(() => {
+        playlistArtists.set(data.topArtists)
+    });
+
     const trackSelections = writable<TrackSelection[]>([])
-    $: {
+    run(() => {
         const newTrackSelections = data.playlist.tracks.data
             .map(track => ({track, inPlaylist: true, selected: true}));
         trackSelections.set(newTrackSelections)
-    }
+    });
 
 
     async function relinkNonReadableTracks() {
@@ -76,7 +82,7 @@
         SEARCH_ARTISTS:3,
     }
 
-    let tabIndex = TabIndex.TRACKS
+    let tabIndex = $state(TabIndex.TRACKS)
 
     const toolbarStore = getToolbarStore();
 
@@ -122,9 +128,11 @@
 <PlaylistApplicationShell>
 
 
-    <svelte:fragment slot="pageHeader">
-        <ProgressBar {updateTracksProgress}/>
-    </svelte:fragment>
+    {#snippet pageHeader()}
+    
+            <ProgressBar {updateTracksProgress}/>
+        
+    {/snippet}
 
     <span class:opacity-50={$updateTracksProgress}>
         <span class="h3">
@@ -140,23 +148,25 @@
                  value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
             <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
             <!-- Tab Panels --->
-            <svelte:fragment slot="panel">
-                {#if tabIndex === TabIndex.DESCRIPTION}
-                    <PlaylistInfo playlist={data.playlist}/>
-                {:else if tabIndex === TabIndex.TRACKS}
-                    <PlaylistTracks {trackSelections} artists={$playlistArtists} {toastStore} />
-                {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
-                    <p><i>
-                        you can add/remove all tracks from a playlist artist from here
-                    </i></p>
-                    <PlaylistArtists {playlistArtists} {trackSelections} {toastStore}/>
-                {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
-                    <p class="my-4"><i>
-                        you can add all tracks from a new artist from here
-                    </i></p>
-                    <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
-                {/if}
-            </svelte:fragment>
+            {#snippet panel()}
+                    
+                    {#if tabIndex === TabIndex.DESCRIPTION}
+                        <PlaylistInfo playlist={data.playlist}/>
+                    {:else if tabIndex === TabIndex.TRACKS}
+                        <PlaylistTracks {trackSelections} artists={$playlistArtists} {toastStore} />
+                    {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
+                        <p><i>
+                            you can add/remove all tracks from a playlist artist from here
+                        </i></p>
+                        <PlaylistArtists {playlistArtists} {trackSelections} {toastStore}/>
+                    {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
+                        <p class="my-4"><i>
+                            you can add all tracks from a new artist from here
+                        </i></p>
+                        <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
+                    {/if}
+                
+                    {/snippet}
         </TabGroup>
     </span>
 

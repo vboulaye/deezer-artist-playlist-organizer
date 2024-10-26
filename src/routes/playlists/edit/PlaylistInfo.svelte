@@ -2,7 +2,11 @@
     import type {DeezerPlaylistDetails} from "$lib/DeezerApiModel";
     import {SlideToggle} from '@skeletonlabs/skeleton';
 
-    export let playlist: DeezerPlaylistDetails
+    interface Props {
+        playlist: DeezerPlaylistDetails;
+    }
+
+    let { playlist = $bindable() }: Props = $props();
 
 </script>
 
@@ -25,7 +29,7 @@
 
     <label class="label">
         <span>Description</span>
-        <textarea class="textarea" rows="4" placeholder="" bind:value={playlist.description} class:input-error={!playlist.description}/>
+        <textarea class="textarea" rows="4" placeholder="" bind:value={playlist.description} class:input-error={!playlist.description}></textarea>
     </label>
 
 </form>

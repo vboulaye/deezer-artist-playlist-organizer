@@ -2,13 +2,18 @@
     import {cubicIn, cubicOut} from "svelte/easing";
     import {fly} from 'svelte/transition';
 
-    export let pathname: string = '';
-    export let duration = 500
+    interface Props {
+        pathname?: string;
+        duration?: number;
+        children?: import('svelte').Snippet;
+    }
+
+    let { pathname = '', duration = 500, children }: Props = $props();
 </script>
 
 {#key pathname}
     <div in:fly={{ x: -10, duration: duration, easing: cubicOut, delay: duration }}
          out:fly={{ x: 10, duration: duration, easing: cubicIn }}>
-        <slot/>
+        {@render children?.()}
     </div>
 {/key}

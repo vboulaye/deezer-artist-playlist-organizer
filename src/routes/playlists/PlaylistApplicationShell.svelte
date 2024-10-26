@@ -1,28 +1,55 @@
 <script lang="ts">
     import {AppShell} from '@skeletonlabs/skeleton';
+    interface Props {
+        sidebarLeft?: import('svelte').Snippet;
+        sidebarRight?: import('svelte').Snippet;
+        pageHeader?: import('svelte').Snippet;
+        footer?: import('svelte').Snippet;
+        header?: import('svelte').Snippet;
+        children?: import('svelte').Snippet;
+    }
+
+    let {
+        sidebarLeft,
+        sidebarRight,
+        pageHeader,
+        footer,
+        header,
+        children
+    }: Props = $props();
 </script>
 <!--slotSidebarLeft="mx-2 h-100vh overflow-scroll w-0 lg:w-1/5"-->
 <!--slotSidebarRight="mx-2 h-100vh overflow-scroll w-0 lg:w-1/5"-->
 
 <AppShell slotPageContent="overflow-scroll"
 >
-    <svelte:fragment slot="sidebarLeft">
-        <slot name="sidebarLeft"/>
-    </svelte:fragment>
-    <svelte:fragment slot="sidebarRight">
-        <slot name="sidebarRight"/>
-    </svelte:fragment>
-    <svelte:fragment slot="pageHeader">
-        <slot name="pageHeader"/>
-    </svelte:fragment>
-    <svelte:fragment slot="footer">
-        <slot name="footer"/>
-    </svelte:fragment>
-    <svelte:fragment slot="header">
-        <slot name="header"/>
-    </svelte:fragment>
+    {#snippet sidebarLeft()}
+    
+            {@render sidebarLeft?.()}
+        
+    {/snippet}
+    {#snippet sidebarRight()}
+    
+            {@render sidebarRight?.()}
+        
+    {/snippet}
+    {#snippet pageHeader()}
+    
+            {@render pageHeader?.()}
+        
+    {/snippet}
+    {#snippet footer()}
+    
+            {@render footer?.()}
+        
+    {/snippet}
+    {#snippet header()}
+    
+            {@render header?.()}
+        
+    {/snippet}
 
-    <slot/>
+    {@render children?.()}
 </AppShell>
 
 <style>
