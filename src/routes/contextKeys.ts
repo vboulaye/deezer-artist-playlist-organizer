@@ -11,7 +11,7 @@ export const CONTEXT_KEYS = {
 export interface ToolbarLink {
     href?: string
     onclick?: () => void;
-    disabled?: (page:Page) => boolean;
+    disabled?: () => boolean;
     visible?: (page:Page) => boolean;
     title?: string;
     icon?: any;

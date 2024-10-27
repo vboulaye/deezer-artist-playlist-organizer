@@ -3,7 +3,7 @@
     import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {onDestroy, onMount} from "svelte";
-    import {writable} from "svelte/store";
+    import {get, writable} from "svelte/store";
     import ClearPlaylistIcon from '~icons/ph/backspace-bold';
 
     import IconSave from '~icons/ph/cloud-check-bold'
@@ -102,14 +102,6 @@
         },
     ]
 
-    // triggers a toolbar update on selection changes
-    // const unsubscribeToolbarUpdate = playlistState.trackSelections.subscribe(() => toolbarStore.update(toolbar => toolbar));
-
-    $effect(() => {
-        console.log("changes", playlistState.trackSelections.length)
-        toolbarStore.update(toolbar => toolbar)
-    })
-
 
     onMount(() => {
         if (playlistState.isUpdatable) {
@@ -123,7 +115,6 @@
 
     onDestroy(() => {
         toolbarStore.update(toolbarIcons => toolbarIcons.filter(toolbarIcon => !playlistIcons.includes(toolbarIcon)))
-        // unsubscribeToolbarUpdate()
     })
 
 </script>
