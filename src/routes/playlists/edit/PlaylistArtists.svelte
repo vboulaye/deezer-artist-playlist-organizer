@@ -15,7 +15,7 @@
 
     interface Props {
         playlistArtists: Writable<DeezerArtist[]>;
-        trackSelections: Writable<TrackSelection[]>;
+        trackSelections: TrackSelection[];
         toastStore: ToastStore;
     }
 
@@ -32,7 +32,7 @@
         if (newSort.orderBy !== undefined) {
             playlistArtistsSort.orderBy = newSort.orderBy
         }
-        playlistArtists.update(playlistArtists => sortArtistsWithNewSort(playlistArtists, playlistArtistsSort, $trackSelections))
+        playlistArtists.update(playlistArtists => sortArtistsWithNewSort(playlistArtists, playlistArtistsSort, trackSelections))
     }
 
 </script>

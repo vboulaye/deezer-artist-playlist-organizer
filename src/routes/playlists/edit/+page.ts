@@ -51,7 +51,7 @@ export async function load({url, parent}: PageLoadEvent) {
 
     const playlistTopArtists = Object.values(artistsById)
         // .filter(artist => artist.count >= playlist.tracks.data.length / 3)
-        .sort((a, b) => b.count - a.count)
+        .toSorted((a, b) => b.count - a.count)
 
     const topArtists = Promise.all(playlistTopArtists.map(async topArtist => {
 

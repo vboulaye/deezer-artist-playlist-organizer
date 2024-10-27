@@ -13,7 +13,7 @@
         src,
         loop = false,
         enabled = true,
-        paused = $bindable(true)
+        paused = true
     }: Props = $props();
 
     function switchPlayerMode() {

@@ -57,7 +57,7 @@ export async function callDeezer<T>(req: {
     if (req.searchParams) {
         Object.entries(req.searchParams)
             .forEach(([key, value]) => {
-                url.searchParams.set(key, value ? encodeURIComponent(value) : "")
+                url.searchParams.set(key, value ? ""+value : "")
             })
     }
 

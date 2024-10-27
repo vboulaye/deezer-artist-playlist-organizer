@@ -1,9 +1,9 @@
 <script lang="ts">
 
-    import type {DeezerArtist} from "$lib/DeezerApiModel";
+    import type {DeezerArtist, DeezerPlaylistDetails} from "$lib/DeezerApiModel";
     import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {onDestroy, onMount} from "svelte";
-    import {get, writable} from "svelte/store";
+    import {writable} from "svelte/store";
     import ClearPlaylistIcon from '~icons/ph/backspace-bold';
 
     import IconSave from '~icons/ph/cloud-check-bold'
@@ -18,10 +18,9 @@
     import PlaylistTracks from "./PlaylistTracks.svelte";
     import {savePlaylist} from "./playlistUpdater";
     import ProgressBar from "./ProgressBar.svelte";
-    import type {TrackSelection} from "./trackSelection";
     import {addArtistTracks, purgePlaylistTrackSelections} from "./trackSelection";
     import type {UpdateTracksProgress} from "./updateTracksProgress";
-    import { playlistState} from "./playlistState.svelte";
+    import {playlistState} from "./playlistState.svelte";
 
     const toastStore = getToastStore();
 
@@ -31,39 +30,40 @@
         data: PageData;
     }
 
-    let {data = $bindable()}: Props = $props();
+    let {data}: Props = $props();
 
     const playlistArtists = writable<DeezerArtist[]>([])
     $effect(() => {
         playlistArtists.set(data.topArtists)
     });
 
-    const trackSelections = writable<TrackSelection[]>([])
-    $effect(() => {
-        const newTrackSelections = data.playlist.tracks.data
-            .map(track => ({track, inPlaylist: true, selected: true}));
-        trackSelections.set(newTrackSelections)
-    });
+    function updatePlaylist(playlist: DeezerPlaylistDetails) {
+        playlistState.isUpdatable = data.currentUser?.id === playlist?.creator?.id
+        playlistState.playlist = playlist
+        playlistState.trackSelections = playlist.tracks.data
+            .map(track => ({track, inPlaylist: true, selected: true}))
+    }
 
+    $effect(() => {
+        updatePlaylist(data.playlist)
+    })
 
     async function relinkNonReadableTracks() {
         try {
-            const trackSelectionsList: TrackSelection[] = get(trackSelections);
-            await relinkNonReadableTrackSelections(trackSelectionsList, toastStore, updateTracksProgress);
-            trackSelections.set(trackSelectionsList)
+            await relinkNonReadableTrackSelections(playlistState.trackSelections, toastStore, updateTracksProgress);
         } finally {
             updateTracksProgress.set(undefined)
         }
     }
 
     function purgePlaylist() {
-        trackSelections.update(trackSelectionsList => purgePlaylistTrackSelections(trackSelectionsList, toastStore))
+        purgePlaylistTrackSelections(playlistState.trackSelections, toastStore)
     }
 
 
     function addArtist(artist: DeezerArtist) {
-        if ($trackSelections.length === 0) {
-            data.playlist.title = artist.name + " - Full Discography"
+        if (playlistState.trackSelections.length === 0 && playlistState.playlist) {
+            playlistState.playlist.title = artist.name + " - Full Discography"
         }
         playlistArtists.update(artists => {
             const existingArtistIndex = artists.findIndex(a => a.id === artist.id);
@@ -72,7 +72,7 @@
             }
             return artists
         })
-        addArtistTracks(artist, trackSelections, toastStore)
+        addArtistTracks(artist, playlistState.trackSelections, toastStore)
     }
 
     const TabIndex = {
@@ -89,7 +89,7 @@
     //prepare the list of action icons to add to the main toolbar
     const playlistIcons: ToolbarLink[] = [
         {
-            onclick: () => savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress),
+            onclick: () => savePlaylist(playlistState.playlist, playlistState.trackSelections, toastStore, updateTracksProgress),
             title: "Update playlist",
             icon: IconSave,
         },
@@ -97,28 +97,30 @@
             onclick: () => relinkNonReadableTracks(),
             title: "Fix missing tracks",
             icon: RelinkTracksIcon,
-            disabled: () => $trackSelections.filter(x => x.selected && !x.track.readable).length === 0
+            disabled: () => playlistState.trackSelections.filter(x => x.selected && !x.track.readable).length === 0
         },
         {
             onclick: () => purgePlaylist(),
             title: "Clear deselected tracks",
             icon: ClearPlaylistIcon,
-            disabled: () => $trackSelections.filter(x => !x.selected && !x.inPlaylist).length === 0
+            disabled: () => playlistState.trackSelections.filter(x => !x.selected && !x.inPlaylist).length === 0
         },
     ]
 
     // triggers a toolbar update on selection changes
-    const unsubscribeToolbarUpdate = trackSelections.subscribe(() => toolbarStore.update(toolbar => toolbar));
+    // const unsubscribeToolbarUpdate = playlistState.trackSelections.subscribe(() => toolbarStore.update(toolbar => toolbar));
 
     $effect(() => {
-        playlistState.isUpdatable = data.currentUser?.id===data.playlist?.creator?.id
+        console.log("changes", playlistState.trackSelections.length)
+        toolbarStore.update(toolbar => toolbar)
     })
+
 
     onMount(() => {
         if (playlistState.isUpdatable) {
             toolbarStore.update(toolbar => [...toolbar, ...playlistIcons,])
         }
-        if (!data.playlist.tracks.data.length) {
+        if (!playlistState.playlist?.tracks.data.length) {
             tabIndex = TabIndex.SEARCH_ARTISTS
         }
     })
@@ -126,21 +128,23 @@
 
     onDestroy(() => {
         toolbarStore.update(toolbarIcons => toolbarIcons.filter(toolbarIcon => !playlistIcons.includes(toolbarIcon)))
-        unsubscribeToolbarUpdate()
+        // unsubscribeToolbarUpdate()
     })
 
 </script>
 
 
-<PlaylistApplicationShell>
+{#if playlistState.playlist}
 
-    {#snippet pageHeader()}
-        <ProgressBar {updateTracksProgress}/>
-    {/snippet}
+    <PlaylistApplicationShell>
 
-    <span class:opacity-50={$updateTracksProgress}>
+        {#snippet pageHeader()}
+            <ProgressBar {updateTracksProgress}/>
+        {/snippet}
+
+        <span class:opacity-50={$updateTracksProgress}>
         <span class="h3">
-            {data.playlist.title}
+            {playlistState.playlist.title}
         </span>
         <TabGroup>
             <Tab bind:group={tabIndex} name="tabTracks" value={TabIndex.TRACKS}>tracks</Tab>
@@ -148,32 +152,36 @@
             <Tab bind:group={tabIndex} name="tabPlaylistArtists"
                  value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
             {#if playlistState.isUpdatable}
-                <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
+                <Tab bind:group={tabIndex} name="tabSearchArtists"
+                     value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
             {/if}
             <!-- Tab Panels --->
             {#snippet panel()}
-                    
+
                     {#if tabIndex === TabIndex.DESCRIPTION}
-                        <PlaylistInfo playlist={data.playlist}/>
+                        <PlaylistInfo/>
                     {:else if tabIndex === TabIndex.TRACKS}
-                        <PlaylistTracks {trackSelections} artists={$playlistArtists} {toastStore}/>
+                        <PlaylistTracks artists={$playlistArtists}
+                                        {toastStore}/>
                     {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
                         <p><i>
                             you can add/remove all tracks from a playlist artist from here
                         </i></p>
-                        <PlaylistArtists {playlistArtists} {trackSelections} {toastStore}/>
+                        <PlaylistArtists {playlistArtists} trackSelections={playlistState.trackSelections}
+                                         {toastStore}/>
                     {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
                         <p class="my-4"><i>
                             you can add all tracks from a new artist from here
                         </i></p>
                         <ArtistsFinder onArtistSelection={artist=> addArtist(artist)}/>
                     {/if}
-                
+
             {/snippet}
         </TabGroup>
     </span>
 
-</PlaylistApplicationShell>
+    </PlaylistApplicationShell>
+{/if}
 
 <style>
 

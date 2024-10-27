@@ -72,7 +72,7 @@
                         <!--                class="sr-only md:not-sr-only">Create new Playlist</span></HorizontalSpan></a>-->
                         <!--    {:else }-->
                         <!--        <a href="{base}/"><IconPlayList/></a>-->
-                        <!--    {/if}-->
+<!--                                {/if}-->
 
                         {#each $toolbarStore as toolbarItem}
                             {#if !toolbarItem.visible || toolbarItem.visible($page)}

@@ -109,6 +109,7 @@ async function updateTracks(
     for (const w of window(trackIds, windowSize)) {
         count += windowSize
         updateTracksProgress.set({message: `sending ${count} / ${trackIds.length} ${requestMethod} ${param} `, value: count, max: trackIds.length})
+        console.log(`sending ${count} / ${trackIds.length} ${requestMethod} ${param} `)
         console.log(`sending ${requestMethod} ${param}=${JSON.stringify(w)}`)
         const searchParams: DeezerSearchParams = {
             request_method: requestMethod,

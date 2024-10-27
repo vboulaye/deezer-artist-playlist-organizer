@@ -2,7 +2,6 @@
 
     import type {DeezerArtist} from "$lib/DeezerApiModel";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
-    import type {Writable} from "svelte/store";
     import RemoveIcon from '~icons/ph/minus-circle-bold';
     import AddIcon from '~icons/ph/plus-circle-bold';
 
@@ -13,13 +12,13 @@
 
     interface Props {
         readonly topArtist: DeezerArtist;
-        readonly trackSelections: Writable<TrackSelection[]>;
+        readonly trackSelections: TrackSelection[];
         readonly toastStore: ToastStore;
     }
 
     let { topArtist, trackSelections, toastStore }: Props = $props();
 
-    let trackCount = $derived(getTrackCount(topArtist.id, $trackSelections))
+    let trackCount = $derived(getTrackCount(topArtist.id, trackSelections))
 
     let addHover = $state(false)
     let removeHover = $state(false)
