@@ -1,4 +1,4 @@
-import {ROOT_LOGGER, traceDuration} from "$lib/Debug";
+import {ROOT_LOGGER} from "$lib/Debug";
 import {callDeezer} from "$lib/DeezerCall";
 
 
@@ -11,8 +11,8 @@ export function extractPaginationIndex(url: URL): number | undefined {
     }
     try {
         return parseInt(indexFromSearchParams)
-    } catch (e) {
-        LOGGER("unable to parse page index %s from url %s", indexFromSearchParams, url)
+    } catch (e:unknown) {
+        LOGGER("unable to parse page index %s from url %s : %s", indexFromSearchParams, url, e)
         return undefined
     }
 }

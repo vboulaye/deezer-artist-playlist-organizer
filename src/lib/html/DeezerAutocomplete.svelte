@@ -1,4 +1,5 @@
-<!-- @migration-task Error while migrating Svelte code: $$props is used together with named props in a way that cannot be automatically migrated. -->
+<!-- FIXME Migrate to scelte 5 once skelton has migrated -->
+<!--  @migration-task Error while migrating Svelte code: $$props is used together with named props in a way that cannot be automatically migrated. -->
 <!--
 copied from  https://github.com/skeletonlabs/skeleton/blob/dev/packages/skeleton/src/lib/components/Autocomplete/Autocomplete.svelte
 -->

@@ -30,7 +30,7 @@ export async function load({url}: PageLoadEvent): Promise<{ playlists: Paginated
 
     if (startIndex) {
         return {
-            playlists: await  callDeezer<PaginatedResult<DeezerPlaylist>>({
+            playlists: await callDeezer<PaginatedResult<DeezerPlaylist>>({
                 apiPath: `/user/me/playlists`,
                 searchParams: {
                     limit: 1000,
@@ -43,7 +43,7 @@ export async function load({url}: PageLoadEvent): Promise<{ playlists: Paginated
 
 
     return {
-        playlists: await  traceDuration<PaginatedResult<DeezerPlaylist>>("getRemainingPages:",
+        playlists: await traceDuration("getRemainingPages:",
             async () => await getRemainingPages<DeezerPlaylist>({
                 apiPath: `/user/me/playlists`,
                 limit: 500,

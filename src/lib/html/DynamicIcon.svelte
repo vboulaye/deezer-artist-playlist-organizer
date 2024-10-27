@@ -1,48 +1,41 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
     // from https://github.com/hazg/svelte-dynamic-iconify/blob/master/src/icon.svelte
     import Iconify from '@iconify/iconify';
-    import { onMount } from 'svelte'
+    import {onMount} from 'svelte'
 
-  interface Props {
-    name: string;
-    [key: string]: any
-  }
+    interface Props {
+        readonly name: string;
+        [key: string]: any
+    }
 
-  let { ...props }: Props = $props();
+    let {...props}: Props = $props();
+    const iconData = $derived(props.name ? Iconify.getSVGObject(props.name) : false);
+    const iconExists = $derived(props.name ? Iconify.iconExists(props.name) : false);
 
     onMount(async () => {
-        if(!props.name) return;
+        if (!props.name) return;
         Iconify.preloadImages([props.name])
-        document.addEventListener('IconifyAddedIcons', function() {
-            iconData = Iconify.getSVGObject(props.name)
-            iconExists = Iconify.iconExists(props.name)
-        });
+        // document.addEventListener('IconifyAddedIcons', function () {
+        //     iconData = Iconify.getSVGObject(props.name)
+        //     iconExists = Iconify.iconExists(props.name)
+        // });
 
     });
 
-    let iconData;
-  run(() => {
-    iconData = props.name?Iconify.getSVGObject(props.name):false
-  });
-    let iconExists;
-  run(() => {
-    iconExists = props.name?Iconify.iconExists(props.name):false
-  });
+
 
 </script>
 
 <span class="iconify">
 {#if iconExists}
-  <svg {...Object.assign({}, iconData.attributes, props)}>
+  <svg {...iconData.attributes}  {...props}>
     {@html iconData.body }
   </svg>
 {/if}
 </span>
 
 <style>
-    svg{
+    svg {
         height: auto;
     }
 </style>

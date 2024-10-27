@@ -1,10 +1,12 @@
 <script lang="ts">
 
+    import type {Snippet} from "svelte";
+
     interface Props {
         justify?: "center" | "start" | "end";
-        title?: string;
+        title?: string|number;
         class?: string;
-        children?: import('svelte').Snippet;
+        children?: Snippet;
     }
 
     let {
@@ -18,7 +20,7 @@
     
 </script>
 
-<td style="vertical-align:middle" {title} class={clazz}>
+<td style="vertical-align:middle" title={""+title} class={clazz}>
     <div class="flex items-center justify-{justify} gap-x-2 h-full">
         {@render children?.()}
     </div>

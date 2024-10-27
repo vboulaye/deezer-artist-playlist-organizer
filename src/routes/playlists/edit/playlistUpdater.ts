@@ -2,7 +2,7 @@ import {invalidateAll} from "$app/navigation";
 import type {DeezerPlaylistDetails} from "$lib/DeezerApiModel";
 import {callDeezer} from "$lib/DeezerCall";
 import type {DeezerSearchParams} from "$lib/DeezerCall";
-import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
+import type {ToastStore} from "@skeletonlabs/skeleton";
 import type {Writable} from "svelte/store";
 import type {TrackSelection} from "./trackSelection";
 import type {UpdateTracksProgress} from "./updateTracksProgress";

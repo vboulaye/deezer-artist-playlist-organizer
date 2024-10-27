@@ -7,6 +7,7 @@ import fetchJsonp from "fetch-jsonp";
 
 const LOGGER = ROOT_LOGGER.extend('call-deezer')
 
+
 async function fetchDeezer(url: URL) {
     if (browser) {
         url.searchParams.set("output", "jsonp")
@@ -43,7 +44,7 @@ export async function callDeezer<T>(req: {
     if (req.searchParams) {
         Object.entries(req.searchParams)
             .forEach(([key, value]) => {
-                url.searchParams.set(key, "" + value)
+                url.searchParams.set(key, value ? encodeURIComponent(value) : "")
             })
     }
 

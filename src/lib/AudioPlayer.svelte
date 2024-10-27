@@ -16,7 +16,6 @@
         paused = $bindable(true)
     }: Props = $props();
 
-
     function switchPlayerMode() {
         if (enabled) {
             paused = !paused
@@ -27,9 +26,15 @@
 
 <audio src={src} bind:paused={paused} loop={loop}></audio>
 <span class:text-gray-500={!enabled}>
-{#if paused}
-    <span role="button" onclick={switchPlayerMode}><IconPlay/></span>
-{:else }
-    <span role="button" onclick={switchPlayerMode}><IconPause/></span>
-{/if}
+    <button type="button" onclick={switchPlayerMode} class="button-icon">
+        {#if paused}
+            <IconPlay/>
+        {:else }
+            <IconPause/>
+        {/if}
+    </button>
 </span>
+
+<style>
+
+</style>

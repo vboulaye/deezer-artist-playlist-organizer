@@ -10,8 +10,7 @@
     import PlaylistArtistsElement from "./PlaylistArtistsElement.svelte";
 
     import type {TrackSelection} from "./trackSelection";
-    import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
-
+    import type {ToastStore} from "@skeletonlabs/skeleton";
 
 
     interface Props {
@@ -33,7 +32,7 @@
         if (newSort.orderBy !== undefined) {
             playlistArtistsSort.orderBy = newSort.orderBy
         }
-        playlistArtists.update(playlistArtists => sortArtistsWithNewSort(playlistArtists, playlistArtistsSort, newSort, $trackSelections))
+        playlistArtists.update(playlistArtists => sortArtistsWithNewSort(playlistArtists, playlistArtistsSort, $trackSelections))
     }
 
 </script>

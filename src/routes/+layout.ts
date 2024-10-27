@@ -15,7 +15,7 @@ function getCurrentUser() {
 
 export const load: LayoutLoad = async ({url}) => {
     return {
-        currentUser: getCurrentUser(),
+        currentUser: await getCurrentUser(),
         pathname: url.pathname,
     }
 }

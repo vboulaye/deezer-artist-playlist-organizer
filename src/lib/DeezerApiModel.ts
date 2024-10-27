@@ -43,6 +43,7 @@ export interface DeezerArtist {
     tracklist: string
     type: "artist"
     picture_small: string
+    nb_album?:number
 }
 
 export interface DeezerAlbum {

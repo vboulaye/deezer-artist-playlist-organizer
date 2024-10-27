@@ -1,13 +1,11 @@
-import type {Cookies} from "@sveltejs/kit";
 import JsCookies from "js-cookie"
-import type {CookieAttributes} from "js-cookie"
 
 const opts = {path: "/"};
 
 class CookieManager<T> {
     constructor(
         private name: string,
-        private options: CookieAttributes
+        private options: typeof JsCookies.attributes
     ) {
     }
 

@@ -25,7 +25,7 @@ async function getPlaylistId(playlistId: string): Promise<string> {
     return playlistId;
 }
 
-export async function load({url}: PageLoadEvent) {
+export async function load({url, parent}: PageLoadEvent) {
 
     // we use a search param rather than a pat param because we deploy a version  client side only
     const playlistId = await getPlaylistId(url.searchParams.get("id") ?? "")
@@ -62,7 +62,9 @@ export async function load({url}: PageLoadEvent) {
     }));
 
 
+    const parentData= await parent()
     return {
+        ...parentData,
         playlist: await playlist,
         topArtists: await topArtists,
     }

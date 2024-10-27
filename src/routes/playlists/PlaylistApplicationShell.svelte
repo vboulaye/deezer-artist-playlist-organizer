@@ -1,12 +1,14 @@
 <script lang="ts">
     import {AppShell} from '@skeletonlabs/skeleton';
+    import type {Snippet} from "svelte";
+
     interface Props {
-        sidebarLeft?: import('svelte').Snippet;
-        sidebarRight?: import('svelte').Snippet;
-        pageHeader?: import('svelte').Snippet;
-        footer?: import('svelte').Snippet;
-        header?: import('svelte').Snippet;
-        children?: import('svelte').Snippet;
+        sidebarLeft?: Snippet;
+        sidebarRight?: Snippet;
+        pageHeader?: Snippet;
+        footer?: Snippet;
+        header?: Snippet;
+        children?: Snippet;
     }
 
     let {
@@ -21,34 +23,12 @@
 <!--slotSidebarLeft="mx-2 h-100vh overflow-scroll w-0 lg:w-1/5"-->
 <!--slotSidebarRight="mx-2 h-100vh overflow-scroll w-0 lg:w-1/5"-->
 
-<AppShell slotPageContent="overflow-scroll"
->
-    {#snippet sidebarLeft()}
-    
-            {@render sidebarLeft?.()}
-        
-    {/snippet}
-    {#snippet sidebarRight()}
-    
-            {@render sidebarRight?.()}
-        
-    {/snippet}
-    {#snippet pageHeader()}
-    
-            {@render pageHeader?.()}
-        
-    {/snippet}
-    {#snippet footer()}
-    
-            {@render footer?.()}
-        
-    {/snippet}
-    {#snippet header()}
-    
-            {@render header?.()}
-        
-    {/snippet}
-
+<AppShell slotPageContent="overflow-scroll">
+    {@render sidebarLeft?.()}
+    {@render sidebarRight?.()}
+    {@render pageHeader?.()}
+    {@render footer?.()}
+    {@render header?.()}
     {@render children?.()}
 </AppShell>
 

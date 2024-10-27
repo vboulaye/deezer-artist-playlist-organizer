@@ -4,15 +4,17 @@
     import DeezerAutocomplete from "$lib/html/DeezerAutocomplete.svelte";
     import type {PaginatedResult} from "$lib/PaginationUtils";
     import type {AutocompleteOption} from "@skeletonlabs/skeleton";
-    import {createEventDispatcher} from "svelte";
     import {derived, writable} from "svelte/store";
     import type {Writable} from "svelte/store";
     import ArtistSelectionComponent from "./ArtistSelectionComponent.svelte";
 
+    interface Props {
+        onArtistSelection: (artist: DeezerArtist) => void;
+    }
+
+    let {onArtistSelection}: Props = $props()
 
     const artistSearch = writable("")
-
-    const dispatch = createEventDispatcher<DeezerArtist>();
 
     const artistsFound = derived<Writable<string>, AutocompleteOption[]>(artistSearch, ($artistSearch, set) => {
         if (!$artistSearch) {
@@ -41,12 +43,9 @@
     <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
     <span class="card w-full max-h-fit  p-4 overflow-y-auto inline-block" tabindex="-1">
         <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound}>
-            {#snippet optionButton({ option: artistOption })}
-                    
-                    <ArtistSelectionComponent artist={artistOption.meta}
-                                              on:click={()=> dispatch('artistSelection', artistOption.meta)}/>
-                
-                    {/snippet}
+            {#snippet optionButton({option})}
+                    <ArtistSelectionComponent artist={option.meta} {onArtistSelection}/>
+            {/snippet}
         </DeezerAutocomplete>
     </span>
 

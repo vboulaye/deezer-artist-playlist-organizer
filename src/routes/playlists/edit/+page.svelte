@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { run } from 'svelte/legacy';
 
     import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
@@ -22,6 +21,7 @@
     import type {TrackSelection} from "./trackSelection";
     import {addArtistTracks, purgePlaylistTrackSelections} from "./trackSelection";
     import type {UpdateTracksProgress} from "./updateTracksProgress";
+    import { playlistState} from "./playlistState.svelte";
 
     const toastStore = getToastStore();
 
@@ -31,15 +31,15 @@
         data: PageData;
     }
 
-    let { data = $bindable() }: Props = $props();
+    let {data = $bindable()}: Props = $props();
 
     const playlistArtists = writable<DeezerArtist[]>([])
-    run(() => {
+    $effect(() => {
         playlistArtists.set(data.topArtists)
     });
 
     const trackSelections = writable<TrackSelection[]>([])
-    run(() => {
+    $effect(() => {
         const newTrackSelections = data.playlist.tracks.data
             .map(track => ({track, inPlaylist: true, selected: true}));
         trackSelections.set(newTrackSelections)
@@ -76,10 +76,10 @@
     }
 
     const TabIndex = {
-        DESCRIPTION:0,
-        TRACKS:1,
-        PLAYLIST_ARTISTS:2,
-        SEARCH_ARTISTS:3,
+        DESCRIPTION: 0,
+        TRACKS: 1,
+        PLAYLIST_ARTISTS: 2,
+        SEARCH_ARTISTS: 3,
     }
 
     let tabIndex = $state(TabIndex.TRACKS)
@@ -87,7 +87,7 @@
     const toolbarStore = getToolbarStore();
 
     //prepare the list of action icons to add to the main toolbar
-    const playlistIcons:ToolbarLink[] = [
+    const playlistIcons: ToolbarLink[] = [
         {
             onclick: () => savePlaylist(data.playlist, $trackSelections, toastStore, updateTracksProgress),
             title: "Update playlist",
@@ -110,12 +110,19 @@
     // triggers a toolbar update on selection changes
     const unsubscribeToolbarUpdate = trackSelections.subscribe(() => toolbarStore.update(toolbar => toolbar));
 
+    $effect(() => {
+        playlistState.isUpdatable = data.currentUser?.id===data.playlist?.creator?.id
+    })
+
     onMount(() => {
-        toolbarStore.update(toolbar => [...toolbar, ...playlistIcons,])
+        if (playlistState.isUpdatable) {
+            toolbarStore.update(toolbar => [...toolbar, ...playlistIcons,])
+        }
         if (!data.playlist.tracks.data.length) {
             tabIndex = TabIndex.SEARCH_ARTISTS
         }
     })
+
 
     onDestroy(() => {
         toolbarStore.update(toolbarIcons => toolbarIcons.filter(toolbarIcon => !playlistIcons.includes(toolbarIcon)))
@@ -127,11 +134,8 @@
 
 <PlaylistApplicationShell>
 
-
     {#snippet pageHeader()}
-    
-            <ProgressBar {updateTracksProgress}/>
-        
+        <ProgressBar {updateTracksProgress}/>
     {/snippet}
 
     <span class:opacity-50={$updateTracksProgress}>
@@ -140,20 +144,19 @@
         </span>
         <TabGroup>
             <Tab bind:group={tabIndex} name="tabTracks" value={TabIndex.TRACKS}>tracks</Tab>
-            <Tab bind:group={tabIndex} name="tabMain" value={TabIndex.DESCRIPTION}>
-                <!--            <svelte:fragment slot="lead">(icon)</svelte:fragment>-->
-                details
-            </Tab>
+            <Tab bind:group={tabIndex} name="tabMain" value={TabIndex.DESCRIPTION}>details</Tab>
             <Tab bind:group={tabIndex} name="tabPlaylistArtists"
                  value={TabIndex.PLAYLIST_ARTISTS}>playlist artists</Tab>
-            <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
+            {#if playlistState.isUpdatable}
+                <Tab bind:group={tabIndex} name="tabSearchArtists" value={TabIndex.SEARCH_ARTISTS}>search new artists</Tab>
+            {/if}
             <!-- Tab Panels --->
             {#snippet panel()}
                     
                     {#if tabIndex === TabIndex.DESCRIPTION}
                         <PlaylistInfo playlist={data.playlist}/>
                     {:else if tabIndex === TabIndex.TRACKS}
-                        <PlaylistTracks {trackSelections} artists={$playlistArtists} {toastStore} />
+                        <PlaylistTracks {trackSelections} artists={$playlistArtists} {toastStore}/>
                     {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
                         <p><i>
                             you can add/remove all tracks from a playlist artist from here
@@ -163,10 +166,10 @@
                         <p class="my-4"><i>
                             you can add all tracks from a new artist from here
                         </i></p>
-                        <ArtistsFinder on:artistSelection={e=> addArtist(e.detail)}/>
+                        <ArtistsFinder onArtistSelection={artist=> addArtist(artist)}/>
                     {/if}
                 
-                    {/snippet}
+            {/snippet}
         </TabGroup>
     </span>
 

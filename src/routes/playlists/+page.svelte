@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { run } from 'svelte/legacy';
 
     import {Paginator} from "@skeletonlabs/skeleton";
     import type {PageData} from "./$types";
@@ -23,7 +22,7 @@
 
     let allPlaylists = $derived(data?.playlists?.data)
 
-    run(() => {
+    $effect(() => {
         tracksPage.size = allPlaylists?.length
     });
 
@@ -39,14 +38,7 @@
 </script>
 
 <PlaylistApplicationShell>
-    {#snippet sidebarLeft()}
-    
-        
-    {/snippet}
-    {#snippet sidebarRight()}
-    
-        
-    {/snippet}
+
 
     <div class="table-container">
         <table class="table table-hover ">
@@ -85,8 +77,8 @@
         </table>
         <Paginator
                 bind:settings={tracksPage}
-                showFirstLastButtons="{true}"
-                showPreviousNextButtons="{true}"
+                showFirstLastButtons={true}
+                showPreviousNextButtons={true}
         />
     </div>
 

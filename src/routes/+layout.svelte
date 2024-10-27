@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { preventDefault } from 'svelte/legacy';
 
     import {base} from '$app/paths'
     import {page} from "$app/stores";
@@ -86,7 +85,9 @@
                                      </a>
                                 {/if}
                                 {#if toolbarItem.onclick}
-                                     <button onclick={preventDefault(toolbarItem.onclick)} title={toolbarItem.title}
+                                     <button onclick={toolbarItem.onclick}
+                                             type="button"
+                                             title={toolbarItem.title}
                                              class="disabled:italic disabled:opacity-50"
                                              disabled={toolbarItem.disabled && toolbarItem.disabled($page)}
                                      >

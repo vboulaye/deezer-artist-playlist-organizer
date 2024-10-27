@@ -8,14 +8,13 @@
 
     import type {TrackSelection} from "./trackSelection";
     import {addArtistTracks, getTrackCount, removeArtistTracks} from "./trackSelection";
-    import type {ToastStore} from "@skeletonlabs/skeleton/dist/utilities/Toast/stores";
-
+    import type {ToastStore} from "@skeletonlabs/skeleton";
 
 
     interface Props {
-        topArtist: DeezerArtist;
-        trackSelections: Writable<TrackSelection[]>;
-        toastStore: ToastStore;
+        readonly topArtist: DeezerArtist;
+        readonly trackSelections: Writable<TrackSelection[]>;
+        readonly toastStore: ToastStore;
     }
 
     let { topArtist, trackSelections, toastStore }: Props = $props();
