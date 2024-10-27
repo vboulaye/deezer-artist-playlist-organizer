@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import type {DeezerArtist, DeezerPlaylistDetails} from "$lib/DeezerApiModel";
+    import type {DeezerArtist} from "$lib/DeezerApiModel";
     import {getToastStore, Tab, TabGroup} from '@skeletonlabs/skeleton';
     import {onDestroy, onMount} from "svelte";
     import {writable} from "svelte/store";
@@ -32,20 +32,18 @@
 
     let {data}: Props = $props();
 
-    const playlistArtists = writable<DeezerArtist[]>([])
-    $effect(() => {
-        playlistArtists.set(data.topArtists)
-    });
 
-    function updatePlaylist(playlist: DeezerPlaylistDetails) {
-        playlistState.isUpdatable = data.currentUser?.id === playlist?.creator?.id
-        playlistState.playlist = playlist
-        playlistState.trackSelections = playlist.tracks.data
+
+    function updatePlaylist(data: PageData) {
+        playlistState.isUpdatable = data.currentUser?.id === data.playlist?.creator?.id
+        playlistState.playlist = data.playlist
+        playlistState.playlistArtists = data.topArtists
+        playlistState.trackSelections = data.playlist.tracks.data
             .map(track => ({track, inPlaylist: true, selected: true}))
     }
 
     $effect(() => {
-        updatePlaylist(data.playlist)
+        updatePlaylist(data)
     })
 
     async function relinkNonReadableTracks() {
@@ -65,13 +63,10 @@
         if (playlistState.trackSelections.length === 0 && playlistState.playlist) {
             playlistState.playlist.title = artist.name + " - Full Discography"
         }
-        playlistArtists.update(artists => {
-            const existingArtistIndex = artists.findIndex(a => a.id === artist.id);
-            if (existingArtistIndex < 0) {
-                artists.push(artist)
-            }
-            return artists
-        })
+        const existingArtistIndex = playlistState.playlistArtists.findIndex(a => a.id === artist.id);
+        if (existingArtistIndex < 0) {
+            playlistState.playlistArtists.push(artist)
+        }
         addArtistTracks(artist, playlistState.trackSelections, toastStore)
     }
 
@@ -161,14 +156,12 @@
                     {#if tabIndex === TabIndex.DESCRIPTION}
                         <PlaylistInfo/>
                     {:else if tabIndex === TabIndex.TRACKS}
-                        <PlaylistTracks artists={$playlistArtists}
-                                        {toastStore}/>
+                        <PlaylistTracks {toastStore}/>
                     {:else if tabIndex === TabIndex.PLAYLIST_ARTISTS}
                         <p><i>
                             you can add/remove all tracks from a playlist artist from here
                         </i></p>
-                        <PlaylistArtists {playlistArtists} trackSelections={playlistState.trackSelections}
-                                         {toastStore}/>
+                        <PlaylistArtists   {toastStore}/>
                     {:else if tabIndex === TabIndex.SEARCH_ARTISTS}
                         <p class="my-4"><i>
                             you can add all tracks from a new artist from here

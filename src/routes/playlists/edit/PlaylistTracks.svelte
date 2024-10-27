@@ -18,12 +18,10 @@
 
 
     interface Props {
-        artists: DeezerArtist[];
         toastStore: ToastStore;
     }
 
-    let { artists = [], toastStore}: Props = $props();
-
+    let {toastStore}: Props = $props();
 
 
     function computeRowClass(trackSelection: TrackSelection): string {
@@ -156,7 +154,8 @@
                             onRemove={()=> removeArtistTracks(row.artist.id, playlistState.trackSelections)}>
                         <a href={row.artist.link} title="open artist in Deezer web interface">
                             <HorizontalSpan>
-                                <img class="largeonly" src={getArtist(row, artists)?.picture_small} alt="artist"/>
+                                <img class="largeonly"
+                                     src={getArtist(row, playlistState.playlistArtists)?.picture_small} alt="artist"/>
                                 <span class="whitespace-normal">{row.artist.name}</span>
                             </HorizontalSpan>
                         </a>

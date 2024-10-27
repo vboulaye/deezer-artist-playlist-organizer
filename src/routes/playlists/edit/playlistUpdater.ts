@@ -8,11 +8,14 @@ import type {TrackSelection} from "./trackSelection";
 import type {UpdateTracksProgress} from "./updateTracksProgress";
 
 export async function savePlaylist(
-    playlist: DeezerPlaylistDetails,
+    playlist: DeezerPlaylistDetails | undefined,
     trackSelections: TrackSelection[],
     toastStore: ToastStore,
     updateTracksProgress: Writable<UpdateTracksProgress| undefined>,
 ) {
+    if (!playlist) {
+        return;
+    }
     const searchParams: DeezerSearchParams = {
         request_method: "POST",
     };

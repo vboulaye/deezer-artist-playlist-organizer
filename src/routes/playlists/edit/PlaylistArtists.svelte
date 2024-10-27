@@ -1,25 +1,21 @@
 <script lang="ts">
 
-    import type {DeezerArtist} from "$lib/DeezerApiModel";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
-    import type {Writable} from "svelte/store";
     import SortAscendingIcon from '~icons/ph/sort-ascending-bold';
     import SortDescendingIcon from '~icons/ph/sort-descending-bold';
     import type {PlaylistArtistsSort} from "./artistsSorter";
     import {sortArtistsWithNewSort} from "./artistsSorter";
     import PlaylistArtistsElement from "./PlaylistArtistsElement.svelte";
 
-    import type {TrackSelection} from "./trackSelection";
     import type {ToastStore} from "@skeletonlabs/skeleton";
+    import {playlistState} from "./playlistState.svelte";
 
 
     interface Props {
-        playlistArtists: Writable<DeezerArtist[]>;
-        trackSelections: TrackSelection[];
         toastStore: ToastStore;
     }
 
-    let { playlistArtists, trackSelections, toastStore }: Props = $props();
+    let {   toastStore }: Props = $props();
     export const playlistArtistsSort: PlaylistArtistsSort = $state({
         ascending: false,
         orderBy: "trackCount"
@@ -32,13 +28,13 @@
         if (newSort.orderBy !== undefined) {
             playlistArtistsSort.orderBy = newSort.orderBy
         }
-        playlistArtists.update(playlistArtists => sortArtistsWithNewSort(playlistArtists, playlistArtistsSort, trackSelections))
+        sortArtistsWithNewSort(playlistState.playlistArtists, playlistArtistsSort, playlistState.trackSelections)
     }
 
 </script>
 
 
-{#if $playlistArtists?.length > 0}
+{#if playlistState.playlistArtists?.length > 0}
         <span class="flex justify-between w-full items-center gap-x-2 my-4">
             <HorizontalSpan><h4>Playlists Artists</h4></HorizontalSpan>
             <HorizontalSpan>
@@ -63,8 +59,8 @@
             </HorizontalSpan>
            </span>
     <ul class="list">
-        {#each $playlistArtists as topArtist}
-            <PlaylistArtistsElement {topArtist} {trackSelections} {toastStore}/>
+        {#each playlistState.playlistArtists as topArtist}
+            <PlaylistArtistsElement {topArtist} {toastStore}/>
         {/each}
     </ul>
 {/if}
