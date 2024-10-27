@@ -9,7 +9,7 @@ export const ssr = false
 
 export async function load({url}: PageLoadEvent): Promise<{ playlists: PaginatedResult<DeezerPlaylist> }> {
 
-    console.error({xxx: url.searchParams})
+    // console.error({xxx: url.searchParams})
     const startIndex = extractPaginationIndex(url);
 
     const search = url.searchParams.get("search");

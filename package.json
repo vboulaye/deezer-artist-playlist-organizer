@@ -39,6 +39,7 @@
 		"@typescript-eslint/eslint-plugin": "^8.11.0",
 		"@typescript-eslint/parser": "^8.11.0",
 		"autoprefixer": "^10.4.20",
+		"bottleneck": "^2.19.5",
 		"debug": "4.3.7",
 		"eslint": "^9.13.0",
 		"eslint-config-prettier": "^9.1.0",
