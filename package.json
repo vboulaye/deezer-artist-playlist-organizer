@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"engines": {
-		"node": "22"
+		"node": "24"
 	},
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
@@ -22,8 +22,7 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.1.0",
 		"@eslint/js": "^9.13.0",
-		"@iconify-json/jam": "^1.2.1",
-		"@iconify-json/ph": "^1.2.1",
+		"@iconify-json/ph": "^1.2.2",
 		"@playwright/test": "^1.48.2",
 		"@skeletonlabs/skeleton": "^2.10.3",
 		"@skeletonlabs/tw-plugin": "^0.4.0",

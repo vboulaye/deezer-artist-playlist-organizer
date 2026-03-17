@@ -23,7 +23,7 @@ copied from  https://github.com/skeletonlabs/skeleton/blob/dev/packages/skeleton
     // import { flip } from 'svelte/animate';
     // import {slide} from 'svelte/transition';
 
-    export function dynamicTransition(node, dynParams) {
+    export function dynamicTransition(node: Element, dynParams:{ transition:unknown, params:unknown, enabled:boolean } ) {
         const { transition, params, enabled } = dynParams;
         if (enabled)
             return transition(node, params);

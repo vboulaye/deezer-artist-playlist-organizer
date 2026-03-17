@@ -89,7 +89,7 @@
                                              type="button"
                                              title={toolbarItem.title}
                                              class="disabled:italic disabled:opacity-50"
-                                             disabled={toolbarItem.disabled && toolbarItem.disabled($page)}
+                                             disabled={toolbarItem.disabled && toolbarItem.disabled()}
                                      >
                                          <HorizontalSpan>
                                              <toolbarItem.icon/>
