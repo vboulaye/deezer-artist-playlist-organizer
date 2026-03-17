@@ -43,7 +43,7 @@
     <input class="input" type="search" name="demo" bind:value={$artistSearch} placeholder="Search..."/>
     <span class="card w-full max-h-fit  p-4 overflow-y-auto inline-block" tabindex="-1">
         <DeezerAutocomplete bind:input={$artistSearch} options={$artistsFound}>
-            {#snippet optionButton({option})}
+            {#snippet optionButton({option}: {option:AutocompleteOption})}
                     <ArtistSelectionComponent artist={option.meta} {onArtistSelection}/>
             {/snippet}
         </DeezerAutocomplete>

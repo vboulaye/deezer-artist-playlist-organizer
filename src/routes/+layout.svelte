@@ -1,7 +1,7 @@
 <script lang="ts">
 
-    import {base} from '$app/paths'
-    import {page} from "$app/stores";
+    import {resolve} from '$app/paths'
+    import {page} from "$app/state";
     import HorizontalSpan from "$lib/html/HorizontalSpan.svelte";
 
     import {AppBar, initializeStores, LightSwitch, Toast} from "@skeletonlabs/skeleton";
@@ -21,19 +21,19 @@
 
     const toolbarStore = initToolbarStore([
         {
-            href: base + "/",
+            href: resolve( "/"),
             title: "Home",
             icon: IconPlayList,
             visible: (page:Page) => !page.data.currentUser
         },
         {
-            href: base + "/playlists",
+            href: resolve( "/playlists"),
             title: "My playlists",
             icon: IconPlayList,
             visible: (page:Page) => page.data.currentUser
         },
         {
-            href: base + "/playlists/edit?id=NEW",
+            href: resolve( "/playlists/edit?id=NEW"),
             title: "Create new playlist",
             icon: IconMusicNotePlus,
             visible: (page:Page) => page.data.currentUser
@@ -47,7 +47,7 @@
 
 <LoadingVeil/>
 <Toast/>
-{#if !$page.data.currentUser}
+{#if !page.data.currentUser}
     <a href="https://github.com/vboulaye/deezer-artist-playlist-organizer" class="xtralargeonly absolute left-0 top-0">
         <img decoding="async" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_left_darkblue_121621.png?resize=149%2C149" alt="Fork me on GitHub" loading="lazy" data-recalc-dims="1">
     </a>
@@ -65,7 +65,7 @@
 
                     <!--               <ul class="navItems">-->
                     <span class="flex gap-x-2">
-                    <!--{#if $page.data.currentUser}-->
+                    <!--{#if page.data.currentUser}-->
                         <!--        <a href="{base}/playlists" title="My playlists"><HorizontalSpan><IconPlayList/><span-->
                         <!--                class="sr-only md:not-sr-only">My playlists</span> </HorizontalSpan></a>-->
                         <!--        <a href="{base}/playlists/NEW" data-sveltekit-preload-data="off" title="Create new playlist"><HorizontalSpan><IconMusicNotePlus/><span-->
@@ -75,7 +75,7 @@
 <!--                                {/if}-->
 
                         {#each $toolbarStore as toolbarItem}
-                            {#if !toolbarItem.visible || toolbarItem.visible($page)}
+                            {#if !toolbarItem.visible || toolbarItem.visible(page)}
                                 {#if toolbarItem.href}
                                      <a href="{toolbarItem.href}" title={toolbarItem.title} data-sveltekit-preload-data="off">
                                          <HorizontalSpan>
@@ -102,13 +102,13 @@
                     </span>
                 
                     {/snippet}
-           <!--{#if $page.params?.id}-->
+           <!--{#if page.params?.id}-->
            <!--        <a href="{base}/playlists" title="My playlists"><HorizontalSpan><IconPlayList/><span class="sr-only md:not-sr-only">My playlists</span> </HorizontalSpan></a>-->
            <!--{/if}-->
 
            <!--            <nav>-->
            <!--                <ul class="navItems">-->
-           <!--                    {#if $page.data.currentUser}-->
+           <!--                    {#if page.data.currentUser}-->
            <!--                        <li class="navItem"><a href="{base}/playlists">My Playlists</a></li>-->
            <!--                        <li class="navItem"><a href="{base}/playlists/NEW" data-sveltekit-preload-data="off">Create new Playlist</a></li>-->
            <!--                    {:else }-->

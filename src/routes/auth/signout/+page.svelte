@@ -2,7 +2,7 @@
 
     import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
-    import {base} from "$app/paths";
+    import {resolve} from "$app/paths";
     import {RedirectCookie, TokenCookie} from "$lib/CookieManager";
 
 
@@ -11,7 +11,7 @@
 
     if (browser) {
         setTimeout(() => {
-            goto(base + "/", {invalidateAll: true})
+            goto(resolve("/"), {invalidateAll: true})
         }, 1)
     }
 

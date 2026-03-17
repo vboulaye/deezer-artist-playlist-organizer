@@ -1,7 +1,7 @@
 <script lang="ts">
 
     import {browser} from "$app/environment";
-    import {page} from "$app/stores";
+    import {page} from "$app/state";
     import {PUBLIC_DEEZER_ID,PUBLIC_ORIGIN} from "$env/static/public";
     import {RedirectCookie, TokenCookie} from "$lib/CookieManager";
     import {DeezerConfig} from "$lib/DeezerConfig";
@@ -26,7 +26,7 @@
         const referrer = document.referrer;
         if (referrer) {
             const referrerUrl = new URL(referrer);
-            if (referrerUrl.host === $page.url.host) {
+            if (referrerUrl.host === page.url.host) {
                 console.log("set redriect to " + referrerUrl.pathname)
                 RedirectCookie.set(referrerUrl.pathname)
             }
